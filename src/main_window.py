@@ -4,7 +4,8 @@ import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QHBoxLayout, QTextEdit, QSizePolicy, QFileDialog, QLineEdit,
-    QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView
+    QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView,
+    QScrollArea, QSplitter
 )
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -21,14 +22,14 @@ class MainWindow(QWidget):
         self.setWindowTitle("Device Test GUI")
         self.resize(1200, 900)
 
-        self.layout = QVBoxLayout()
+        main_layout = QVBoxLayout(self)
 
-        # Top button: Discover
+        # Top Discover Button
         discover_layout = QHBoxLayout()
         self.discover_button = QPushButton("Discover Devices")
         self.discover_button.clicked.connect(self.on_discover)
         discover_layout.addWidget(self.discover_button)
-        self.layout.addLayout(discover_layout)
+        main_layout.addLayout(discover_layout)
 
         # Discovered Devices Table
         self.device_table = QTableWidget(0, 4)
@@ -37,20 +38,20 @@ class MainWindow(QWidget):
         self.device_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.device_table.setSelectionMode(QTableWidget.SingleSelection)
         self.device_table.itemSelectionChanged.connect(self.on_discovered_selection_changed)
-        self.layout.addWidget(QLabel("Discovered Devices:"))
-        self.layout.addWidget(self.device_table, 1)
 
-        # Add and Remove Buttons for Testing Devices
+        main_layout.addWidget(QLabel("Discovered Devices:"))
+        main_layout.addWidget(self.device_table)
+
+        # Add/Remove Buttons
         device_action_layout = QHBoxLayout()
         self.add_running_button = QPushButton("Add to Testing Devices")
         self.add_running_button.setEnabled(False)
         self.add_running_button.clicked.connect(self.add_to_running_tests)
-        device_action_layout.addWidget(self.add_running_button)
-
         self.remove_running_button = QPushButton("Remove from Testing Devices")
         self.remove_running_button.clicked.connect(self.remove_from_running_tests)
+        device_action_layout.addWidget(self.add_running_button)
         device_action_layout.addWidget(self.remove_running_button)
-        self.layout.addLayout(device_action_layout)
+        main_layout.addLayout(device_action_layout)
 
         # Devices Testing Table
         self.running_table = QTableWidget(0, 5)
@@ -59,14 +60,14 @@ class MainWindow(QWidget):
         self.running_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.running_table.setSelectionMode(QTableWidget.SingleSelection)
         self.running_table.itemSelectionChanged.connect(self.on_running_selection_changed)
-        self.layout.addWidget(QLabel("Devices Testing:"))
-        self.layout.addWidget(self.running_table, 1)
 
-        # Status label
+        main_layout.addWidget(QLabel("Devices Testing:"))
+        main_layout.addWidget(self.running_table)
+
+        # Control Area
         self.status_label = QLabel("Status: Idle")
-        self.layout.addWidget(self.status_label)
+        main_layout.addWidget(self.status_label)
 
-        # Duration and Rate input fields with Start/Stop buttons
         control_layout = QHBoxLayout()
         self.start_button = QPushButton("Start Test")
         self.stop_button = QPushButton("Stop Test")
@@ -82,9 +83,14 @@ class MainWindow(QWidget):
         control_container = QVBoxLayout()
         control_container.addLayout(control_layout)
         control_container.addLayout(form_layout)
-        self.layout.addLayout(control_container)
+        main_layout.addLayout(control_container)
 
-        # Plot area with toolbar
+        # Plot and Log Area in a Splitter
+        splitter = QSplitter(Qt.Vertical)
+
+        # Plot Area
+        plot_container = QWidget()
+        plot_layout = QVBoxLayout(plot_container)
         self.figure = Figure(figsize=(8, 5), tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -92,32 +98,44 @@ class MainWindow(QWidget):
         self.ax.set_title("Live Test Data")
         self.ax.set_xlabel("Time (ms)")
         self.ax.set_ylabel("mV")
-        self.canvas.setMinimumHeight(450)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        self.layout.addWidget(self.toolbar)
-        self.layout.addWidget(self.canvas)
+        plot_layout.addWidget(self.toolbar)
+        plot_layout.addWidget(self.canvas)
 
-        # Graph save/clear
+        # Graph Buttons
         graph_btn_layout = QHBoxLayout()
         self.save_graph_button = QPushButton("Save Graph")
         self.clear_graph_button = QPushButton("Clear Graph")
         graph_btn_layout.addWidget(self.save_graph_button)
         graph_btn_layout.addWidget(self.clear_graph_button)
-        self.layout.addLayout(graph_btn_layout)
+        plot_layout.addLayout(graph_btn_layout)
 
-        # Log output
+        plot_container.setLayout(plot_layout)
+        splitter.addWidget(plot_container)
+
+        # Log Area
+        log_container = QWidget()
+        log_layout = QVBoxLayout(log_container)
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         self.log_output.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.layout.addWidget(self.log_output)
-
-        # Save log button
+        log_layout.addWidget(self.log_output)
         self.save_log_button = QPushButton("Save Log")
-        self.layout.addWidget(self.save_log_button)
+        log_layout.addWidget(self.save_log_button)
+        log_container.setLayout(log_layout)
+        splitter.addWidget(log_container)
 
-        self.setLayout(self.layout)
+        # Allow splitter to expand properly
+        splitter.setStretchFactor(0, 2)  # Plot takes more space
+        splitter.setStretchFactor(1, 1)  # Log takes less space
 
-        # Internal data
+        main_layout.addWidget(splitter)
+
+        # Finalize
+        self.setLayout(main_layout)
+
+        # Internal data & connections (preserved from previous version)
         self.devices = []
         self.running_devices = []
         self.workers = {}
@@ -126,14 +144,12 @@ class MainWindow(QWidget):
         self.log_lines = {}
         self.statuses = {}
 
-        # Connect buttons
         self.start_button.clicked.connect(self.on_start)
         self.stop_button.clicked.connect(self.on_stop)
         self.save_log_button.clicked.connect(self.save_log)
         self.clear_graph_button.clicked.connect(self.clear_graph)
         self.save_graph_button.clicked.connect(self.save_graph)
 
-        # Disable controls initially
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
 
