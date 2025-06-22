@@ -1,29 +1,81 @@
-/* style.qss */
+/* === Group Box === */
 QGroupBox {
+    border: 2px solid #8f8f91;
+    border-radius: 5px;
+    margin-top: 10px;
+    padding: 5px;
+    background-color: #f9f9f9;
     font-weight: bold;
-    font-size: 10pt;
-    margin-top: 10; /* Increase from 10px to 30px */
+    font-size: 10.5pt;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    padding: 0 3px;
+    padding: 2px 8px;
+    background-color: #e6e6e6;
+    color: #333;
+    border: 1px solid #aaa;
+    border-radius: 3px;
 }
 
+/* === Table Header === */
+QHeaderView::section {
+    background-color: #ececec;
+    padding: 4px;
+    border: 1px solid #bbb;
+    font-weight: bold;
+}
+
+/* === Table === */
+QTableWidget {
+    border: 1px solid #ccc;
+    gridline-color: #ddd;
+    selection-background-color: #b0d8ff;
+    selection-color: #000;
+    alternate-background-color: #f5f5f5;
+}
+
+/* === Buttons === */
+QPushButton {
+    background-color: #4285f4;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #3367d6;
+}
+
+QPushButton:disabled {
+    background-color: #ccc;
+    color: #666;
+}
+
+/* === Labels === */
 QLabel#statusLabel {
-    font-size: 10pt;
     padding: 10px;
+    font-size: 10.5pt;
     background-color: #f4f4f4;
     border: 1px solid #ccc;
     border-radius: 5px;
-    color: #000000; /* Add this line to ensure text is black */
+    color: #333;
 }
 
-#statusLabel {
-    font-size: 10pt;
-    padding: 10px;
-    background-color: #f4f4f4;
+/* === Text Edit (Log Output) === */
+QTextEdit {
+    background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: 6px;
+    font-family: Consolas, monospace;
+    font-size: 9.5pt;
+}
+
+/* === LineEdit === */
+QLineEdit {
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
