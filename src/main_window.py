@@ -171,7 +171,7 @@ class MainWindow(QWidget):
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         self.log_output.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.log_output.setMinimumHeight(150)
+        self.log_output.setMinimumHeight(100)
         log_layout.addWidget(self.log_output)
 
         self.save_log_button = QPushButton("Save Log")
