@@ -263,7 +263,7 @@ class MainWindow(QWidget):
         device = self.manager.running_devices[row]
         
         # Remove device from manager and table
-        self.manager.remove_device_from_test(device)
+        self.manager.remove_running_device(device)
         self.running_table.removeRow(row)
 
         # 🛑 Check if the removed device was the currently selected one
