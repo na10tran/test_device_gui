@@ -186,6 +186,27 @@ class MainWindow(QWidget):
         self.running_table.setItem(row, 3, QTableWidgetItem(str(device.port)))
         self.running_table.setItem(row, 4, QTableWidgetItem("Idle"))
 
+    def remove_from_running_tests(self):
+        selected = self.running_table.selectedItems()
+        if not selected:
+            return
+        row = selected[0].row()
+        serial = self.running_table.item(row, 1).text()
+
+        # Remove from manager
+        self.manager.remove_running_device(serial)
+
+        # Remove from GUI table
+        self.running_table.removeRow(row)
+
+        # Clear GUI state
+        self.status_label.setText(f"Removed device {serial} from testing.")
+        self.log_output.clear()
+        self.ax.clear()
+        self.canvas.draw()
+        self.set_controls_enabled(False)
+        self.clear_graph_button.setEnabled(False)
+
     def on_running_selection_changed(self):
         selected = self.running_table.selectedItems()
         if not selected:
