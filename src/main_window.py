@@ -39,6 +39,7 @@ class MainWindow(QWidget):
         self.device_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.device_table.setSelectionMode(QTableWidget.SingleSelection)
         self.device_table.itemSelectionChanged.connect(self.on_discovered_selection_changed)
+        self.device_table.setMinimumHeight(150)  # Increase as needed
 
         main_layout.addWidget(QLabel("Discovered Devices:"))
         main_layout.addWidget(self.device_table)
@@ -61,6 +62,7 @@ class MainWindow(QWidget):
         self.running_table.itemSelectionChanged.connect(self.on_running_selection_changed)
 
         main_layout.addWidget(QLabel("Devices Testing:"))
+        self.running_table.setMinimumHeight(150)  # Adjust based on preference
         main_layout.addWidget(self.running_table)
 
         self.status_label = QLabel("Status: Idle")
@@ -105,6 +107,7 @@ class MainWindow(QWidget):
         graph_btn_layout.addWidget(self.save_graph_button)
         graph_btn_layout.addWidget(self.clear_graph_button)
         plot_layout.addLayout(graph_btn_layout)
+        plot_container.setMinimumHeight(300)  # or any height you prefer
 
         splitter.addWidget(plot_container)
 
@@ -196,40 +199,47 @@ class MainWindow(QWidget):
     def remove_from_running_tests(self):
         selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
-            QMessageBox.warning(self, "No Device Selected", "Please select a device to remove from the 'Devices Testing' list.")
+            QMessageBox.warning(self, "No Device Selected", "Please select a device to remove from the 'Devices Testing' table.")
             return
 
         row = selected_rows[0].row()
-        device = self.manager.running_devices[row]
 
-        self.manager.remove_running_device(device.serial)
-        self.manager.running_devices.pop(row)
+        if row < 0 or row >= len(self.manager.running_devices):
+            QMessageBox.warning(self, "Invalid Selection", "The selected device no longer exists in the test list.")
+            return
+
+        device = self.manager.running_devices.pop(row)
         self.running_table.removeRow(row)
 
-        self.status_label.setText(f"Removed device {device.serial} from testing.")
-        self.log_output.clear()
-        self.clear_graph()
-        self.set_controls_enabled(False)
-        self.clear_graph_button.setEnabled(False)
-
+        self.manager.remove_running_device(device.serial)
 
     def on_running_selection_changed(self):
-        selected = self.running_table.selectedItems()
-        if not selected:
+        selected_rows = self.running_table.selectionModel().selectedRows()
+        if not selected_rows:
             self.status_label.setText("Select a running test device to view.")
             self.log_output.clear()
-            self.ax.clear()
-            self.canvas.draw()
+            self.clear_graph()
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
             return
 
         self.set_controls_enabled(True)
-        row = selected[0].row()
-        serial = self.running_table.item(row, 1).text()
-        self.update_log(serial)
-        self.update_plot(serial)
-        self.status_label.setText(f"Selected device: {serial}")
+        row = selected_rows[0].row()
+        device = self.manager.running_devices[row]
+        self.status_label.setText(f"Selected device: {device}")
+
+        #self.update_buttons_state(device.serial)
+
+        # Update log output
+        self.log_output.clear()
+        for line in self.manager.get_log(device.serial):
+            self.log_output.append(line)
+
+        # Update plot
+        self.update_plot_for_serial(device.serial)
+
+        # ✅ Enable clear graph button only if test is not running
+        self.clear_graph_button.setEnabled(not self.manager.is_running(device.serial))
 
     def update_log(self, serial):
         self.log_output.clear()
@@ -255,14 +265,32 @@ class MainWindow(QWidget):
         self.duration_input.setEnabled(enabled)
         self.rate_input.setEnabled(enabled)
 
+    def get_selected_running_serial(self):
+        selected_rows = self.running_table.selectionModel().selectedRows()
+        if not selected_rows:
+            return None
+        row = selected_rows[0].row()
+        device = self.manager.running_devices[row]
+        return device.serial
+
     def clear_graph(self):
-        selected = self.running_table.selectedItems()
-        if not selected:
+        serial = self.get_selected_running_serial()
+        if not serial:
+            self.status_label.setText("⚠️ Select a running test device to clear its graph.")
             return
-        row = selected[0].row()
-        serial = self.running_table.item(row, 1).text()
+
+        # Only allow clearing if test is NOT running
+        if self.manager.is_running(serial):
+            self.status_label.setText("Cannot clear graph while test is running.")
+            return
+
         self.manager.clear_plot(serial)
-        self.update_plot(serial)
+        self.update_plot_for_serial(serial)
+
+        self.manager.append_log(serial, "🧹 Graph cleared.")
+        if self.get_selected_running_serial() == serial:
+            self.log_output.append("🧹 Graph cleared.")
+
 
     def save_log(self):
         selected = self.running_table.selectedItems()
@@ -338,6 +366,27 @@ class MainWindow(QWidget):
         self.manager.clear_worker(serial)
         self.update_log(serial)
         self.set_controls_enabled(True)
+
+    def update_plot_for_serial(self, serial):
+        """Redraws the plot for a specific device based on its collected test data."""
+        points = self.manager.get_plot_data(serial)
+        self.ax.clear()
+        self.ax.set_title(f"Live Test Data for {serial}")
+        self.ax.set_xlabel("Time (ms)")
+        self.ax.set_ylabel("mV")
+
+        if points:
+            x, y = zip(*points)
+            if len(x) > 100:
+                self.ax.plot(x, y, 'bo-', markersize=2, linewidth=0.5)
+            else:
+                self.ax.plot(x, y, 'bo-')
+        else:
+            self.ax.text(0.5, 0.5, "No data", transform=self.ax.transAxes,
+                        ha='center', va='center', fontsize=12, color='gray')
+
+        self.canvas.draw()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
