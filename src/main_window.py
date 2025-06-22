@@ -45,10 +45,10 @@ class MainWindow(QWidget):
         main_layout.addWidget(self.device_table)
 
         device_action_layout = QHBoxLayout()
-        self.add_running_button = QPushButton("Add to Testing Devices")
+        self.add_running_button = QPushButton("Add to Devices Testing")
         self.add_running_button.setEnabled(False)
         self.add_running_button.clicked.connect(self.add_to_running_tests)
-        self.remove_running_button = QPushButton("Remove from Testing Devices")
+        self.remove_running_button = QPushButton("Remove from Devices Testing")
         self.remove_running_button.clicked.connect(self.remove_from_running_tests)
         device_action_layout.addWidget(self.add_running_button)
         device_action_layout.addWidget(self.remove_running_button)
@@ -65,8 +65,15 @@ class MainWindow(QWidget):
         self.running_table.setMinimumHeight(150)  # Adjust based on preference
         main_layout.addWidget(self.running_table)
 
+
+        status_layout = QVBoxLayout()
+        status_label_title = QLabel("Current Status:")
+        status_layout.addWidget(status_label_title)
+
         self.status_label = QLabel("Status: Idle")
-        main_layout.addWidget(self.status_label)
+        status_layout.addWidget(self.status_label)
+
+        main_layout.addLayout(status_layout)
 
         control_layout = QHBoxLayout()
         self.start_button = QPushButton("Start Test")
@@ -113,9 +120,14 @@ class MainWindow(QWidget):
 
         log_container = QWidget()
         log_layout = QVBoxLayout(log_container)
+
+        log_label = QLabel("Test Log Output:")
+        log_layout.addWidget(log_label)
+
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         self.log_output.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.log_output.setMinimumHeight(150)  # Adjust based on preference
         log_layout.addWidget(self.log_output)
         self.save_log_button = QPushButton("Save Log")
         log_layout.addWidget(self.save_log_button)
@@ -350,7 +362,7 @@ class MainWindow(QWidget):
         worker = self.manager.workers.get(serial)
         if worker:
             worker.stop_test()
-            self.manager.append_log(serial, "⏹️ Stop Test")
+            self.manager.append_log(serial, "Stop Test")
             self.update_log(serial)
 
     def on_status(self, serial, msg):

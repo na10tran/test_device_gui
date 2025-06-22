@@ -67,7 +67,7 @@ class DeviceWorker(QObject):
             data, addr = sock.recvfrom(1024)
             if addr[0] == self.device.ip:
                 message = data.decode('latin-1')
-                print(f"🔴 Stop response: {message}")
+                print(f"Stop response: {message}")
                 self.status_signal.emit(message)
         except socket.timeout:
             print("⚠️ No response received for STOP command.")
