@@ -271,7 +271,20 @@ class MainWindow(QWidget):
             self.clear_graph()
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
+            self.show_no_data_plot()
 
+    def show_no_data_plot(self):
+        self.ax.clear()
+        self.ax.set_title("Live Test Data")
+        self.ax.set_xlabel("Time (ms)")
+        self.ax.set_ylabel("mV")
+        self.ax.text(
+            0.5, 0.5, "No data",
+            transform=self.ax.transAxes,
+            ha='center', va='center',
+            fontsize=12, color='gray'
+        )
+        self.canvas.draw()
 
 
     def on_running_selection_changed(self):
