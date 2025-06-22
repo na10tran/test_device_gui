@@ -371,7 +371,11 @@ class MainWindow(QWidget):
 
     def on_data(self, serial, t, mv):
         self.manager.append_plot_data(serial, t, mv)
-        self.update_plot(serial)
+
+        # Only update the plot if this device is currently selected
+        current_serial = self.get_selected_running_serial()
+        if current_serial == serial:
+            self.update_plot(serial)
 
     def on_finished(self, serial):
         self.manager.append_log(serial, "✅ Test Finished")
