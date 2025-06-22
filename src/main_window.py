@@ -175,9 +175,9 @@ class MainWindow(QWidget):
         if not selected_rows:
             return
         row = selected_rows[0].row()
-        device = self.devices[row]
+        device = self.manager.devices[row]
 
-        if any(d.serial == device.serial for d in self.running_devices):
+        if any(d.serial == device.serial for d in self.manager.running_devices):
             QMessageBox.information(self, "Info", f"Device {device.serial} already added.")
             return
 
@@ -200,10 +200,10 @@ class MainWindow(QWidget):
             return
 
         row = selected_rows[0].row()
-        device = self.running_devices[row]
+        device = self.manager.running_devices[row]
 
         self.manager.remove_running_device(device.serial)
-        self.running_devices.pop(row)
+        self.manager.running_devices.pop(row)
         self.running_table.removeRow(row)
 
         self.status_label.setText(f"Removed device {device.serial} from testing.")
