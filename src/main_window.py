@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
     QSplitter, QGroupBox
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -281,6 +282,20 @@ class MainWindow(QWidget):
         self.running_table.setItem(row_pos, 3, QTableWidgetItem(str(device.port)))
         self.running_table.setItem(row_pos, 4, QTableWidgetItem(self.manager.get_status(device.serial)))
 
+        # Apply color styling based on initial status
+        self.apply_row_style(row_pos, self.manager.get_status(device.serial))
+
+    def apply_row_style(self, row, status):
+        color = QColor()
+        if "running" in status.lower():
+            color = QColor(255, 255, 204)  # Light yellow
+        elif "finished" in status.lower() or "complete" in status.lower():
+            color = QColor(204, 255, 204)  # Light green
+        else:
+            return  # No special styling
+
+        for col in range(self.running_table.columnCount()):
+            self.running_table.item(row, col).setBackground(color)
 
     def remove_from_running_tests(self):
         selected_rows = self.running_table.selectionModel().selectedRows()
@@ -461,6 +476,13 @@ class MainWindow(QWidget):
     def on_status(self, serial, msg):
         self.manager.append_log(serial, msg)
         self.update_log(serial)
+
+        # Find row for this serial
+        for row in range(self.running_table.rowCount()):
+            if self.running_table.item(row, 1).text() == serial:
+                self.running_table.setItem(row, 4, QTableWidgetItem(self.manager.get_status(serial)))
+                self.apply_row_style(row, self.manager.get_status(serial))
+                break
 
     def on_data(self, serial, t, mv):
         self.manager.append_plot_data(serial, t, mv)
