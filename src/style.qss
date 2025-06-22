@@ -1,7 +1,7 @@
 /* style.qss */
 QGroupBox {
     font-weight: bold;
-    font-size: 14pt;
+    font-size: 10pt;
     margin-top: 10; /* Increase from 10px to 30px */
 }
 
@@ -12,7 +12,7 @@ QGroupBox::title {
 }
 
 QLabel#statusLabel {
-    font-size: 13pt;
+    font-size: 10pt;
     padding: 10px;
     background-color: #f4f4f4;
     border: 1px solid #ccc;
@@ -21,7 +21,7 @@ QLabel#statusLabel {
 }
 
 #statusLabel {
-    font-size: 13pt;
+    font-size: 10pt;
     padding: 10px;
     background-color: #f4f4f4;
     border: 1px solid #ccc;
