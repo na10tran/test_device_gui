@@ -88,7 +88,7 @@ class MainWindow(QWidget):
         status_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
-                font-size: 14pt;
+                font-size: 10pt;
                 margin-top: 10px;
             }
             QGroupBox::title {
@@ -102,7 +102,7 @@ class MainWindow(QWidget):
         self.status_label.setObjectName("statusLabel")
         self.status_label.setWordWrap(True)
         self.status_label.setStyleSheet("""
-            font-size: 13pt;
+            font-size: 10pt;
             padding: 10px;
             background-color: #f4f4f4;
             border: 1px solid #ccc;
@@ -290,7 +290,7 @@ class MainWindow(QWidget):
     def on_running_selection_changed(self):
         selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
-            self.status_label.setText("Select a running test device to view.")
+            #self.status_label.setText("Select a running test device to view.")
             self.selected_device_label.setText("Displaying Data for Selected Device: None")  # Clear label when none selected
             self.log_output.clear()
             self.clear_graph()
