@@ -257,19 +257,29 @@ class MainWindow(QWidget):
     def remove_from_running_tests(self):
         selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
-            QMessageBox.warning(self, "No Device Selected", "Please select a device to remove from the 'Devices Testing' table.")
             return
 
         row = selected_rows[0].row()
-
-        if row < 0 or row >= len(self.manager.running_devices):
-            QMessageBox.warning(self, "Invalid Selection", "The selected device no longer exists in the test list.")
-            return
-
-        device = self.manager.running_devices.pop(row)
+        device = self.manager.running_devices[row]
+        
+        # Remove device from manager and table
+        self.manager.remove_device_from_test(device)
         self.running_table.removeRow(row)
 
-        self.manager.remove_running_device(device.serial)
+        # 🛑 Check if the removed device was the currently selected one
+        remaining_rows = self.running_table.rowCount()
+        if remaining_rows == 0 or row == 0:
+            # If no more devices or removed first device which was selected, clear everything
+            self.status_label.setText("Status: Idle")
+            self.selected_device_label.setText("Displaying Data for Selected Device: None")
+            self.log_output.clear()
+            self.clear_graph()
+            self.set_controls_enabled(False)
+            self.clear_graph_button.setEnabled(False)
+        else:
+            # Optional: Automatically select the next available device
+            self.running_table.selectRow(min(row, remaining_rows - 1))
+
 
     def on_running_selection_changed(self):
         selected_rows = self.running_table.selectionModel().selectedRows()
