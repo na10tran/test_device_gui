@@ -26,7 +26,7 @@ class MainWindow(QWidget):
         self.manager = DeviceManager()
         main_layout = QVBoxLayout(self)
 
-        # === Discover Button Layout ===
+        # === Discover Devices ===
         discover_layout = QHBoxLayout()
         self.discover_button = QPushButton("Scan Devices")
         self.discover_button.setMaximumWidth(200)
@@ -35,7 +35,7 @@ class MainWindow(QWidget):
         discover_layout.addStretch()
         main_layout.addLayout(discover_layout)
 
-        # === Tables for Discovered + In-Test Devices Side by Side ===
+        # === Discovered & Running Tables ===
         self.device_table = QTableWidget(0, 4)
         self.device_table.setHorizontalHeaderLabels(["Model", "Serial", "IP", "Port"])
         self.device_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -71,7 +71,7 @@ class MainWindow(QWidget):
 
         main_layout.addLayout(tables_layout)
 
-        # === Add / Remove Buttons ===
+        # === Add/Remove Buttons ===
         device_action_layout = QHBoxLayout()
         self.add_running_button = QPushButton("Add to Testing")
         self.add_running_button.setEnabled(False)
@@ -82,8 +82,7 @@ class MainWindow(QWidget):
         device_action_layout.addWidget(self.remove_running_button)
         main_layout.addLayout(device_action_layout)
 
-        # === Current Status Group Box ===
-        main_layout.addSpacing(20)
+        # === Status Display ===
         status_group = QGroupBox("Current Device Status")
         status_group.setStyleSheet("""
             QGroupBox {
@@ -112,12 +111,26 @@ class MainWindow(QWidget):
         status_group.setLayout(status_group_layout)
         main_layout.addWidget(status_group)
 
-        # === Controls and Form Inputs ===
-        control_layout = QHBoxLayout()
+        # === Test Control Section ===
+        test_control_group = QGroupBox("Test Controls")
+        test_control_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 10pt;
+                margin-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+            }
+        """)
+        test_control_layout = QVBoxLayout()
+        control_btn_layout = QHBoxLayout()
         self.start_button = QPushButton("Start Test")
         self.stop_button = QPushButton("Stop Test")
-        control_layout.addWidget(self.start_button)
-        control_layout.addWidget(self.stop_button)
+        control_btn_layout.addWidget(self.start_button)
+        control_btn_layout.addWidget(self.stop_button)
 
         form_layout = QFormLayout()
         self.duration_input = QLineEdit("10")
@@ -125,21 +138,37 @@ class MainWindow(QWidget):
         form_layout.addRow("Test Duration (s):", self.duration_input)
         form_layout.addRow("Status Rate (ms):", self.rate_input)
 
-        control_container = QVBoxLayout()
-        control_container.addLayout(control_layout)
-        control_container.addLayout(form_layout)
-        main_layout.addLayout(control_container)
+        test_control_layout.addLayout(control_btn_layout)
+        test_control_layout.addLayout(form_layout)
+        test_control_group.setLayout(test_control_layout)
+        main_layout.addWidget(test_control_group)
 
+        # === Output Display Section ===
+        output_group = QGroupBox("Device Output Display")
+        output_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 10pt;
+                margin-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+            }
+        """)
+        output_group_layout = QVBoxLayout()
+
+        # Selected device label
         self.selected_device_label = QLabel("Displaying Data for Selected Device: None")
         self.selected_device_label.setWordWrap(True)
-        self.selected_device_label.setObjectName("statusLabel")  # Use same objectName to share styling
-        main_layout.addWidget(self.selected_device_label)
+        self.selected_device_label.setObjectName("statusLabel")
+        output_group_layout.addWidget(self.selected_device_label)
 
-
-        # === Plot + Log Split View ===
+        # Splitter (Plot + Log)
         splitter = QSplitter(Qt.Vertical)
 
-        # Plot Container
+        # Plot container
         plot_container = QWidget()
         plot_layout = QVBoxLayout(plot_container)
         self.figure = Figure(figsize=(10, 6), tight_layout=True)
@@ -164,13 +193,11 @@ class MainWindow(QWidget):
         plot_container.setMinimumHeight(450)
         splitter.addWidget(plot_container)
 
-        # Log Container
+        # Log container
         log_container = QWidget()
         log_layout = QVBoxLayout(log_container)
-
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
-        self.log_output.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.log_output.setMinimumHeight(100)
         log_layout.addWidget(self.log_output)
 
@@ -180,11 +207,13 @@ class MainWindow(QWidget):
 
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 1)
-        main_layout.addWidget(splitter)
+        output_group_layout.addWidget(splitter)
+        output_group.setLayout(output_group_layout)
+        main_layout.addWidget(output_group)
 
         self.setLayout(main_layout)
 
-        # === Connect Signals ===
+        # === Signal Connections ===
         self.start_button.clicked.connect(self.on_start)
         self.stop_button.clicked.connect(self.on_stop)
         self.save_log_button.clicked.connect(self.save_log)
@@ -193,7 +222,6 @@ class MainWindow(QWidget):
 
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
-
 
     def on_discover(self):
         self.manager.clear_devices()
