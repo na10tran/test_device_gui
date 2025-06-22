@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QHBoxLayout, QTextEdit, QSizePolicy, QFileDialog, QLineEdit,
     QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView,
-    QSplitter
+    QSplitter, QGroupBox
 )
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -24,57 +24,95 @@ class MainWindow(QWidget):
         self.resize(1200, 900)
 
         self.manager = DeviceManager()
-
         main_layout = QVBoxLayout(self)
 
+        # === Discover Button Layout ===
         discover_layout = QHBoxLayout()
-        self.discover_button = QPushButton("Discover Devices")
+        self.discover_button = QPushButton("Scan Devices")
+        self.discover_button.setMaximumWidth(200)
         self.discover_button.clicked.connect(self.on_discover)
         discover_layout.addWidget(self.discover_button)
+        discover_layout.addStretch()
         main_layout.addLayout(discover_layout)
 
+        # === Tables for Discovered + In-Test Devices Side by Side ===
         self.device_table = QTableWidget(0, 4)
         self.device_table.setHorizontalHeaderLabels(["Model", "Serial", "IP", "Port"])
         self.device_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.device_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.device_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.device_table.setMinimumHeight(150)
         self.device_table.itemSelectionChanged.connect(self.on_discovered_selection_changed)
-        self.device_table.setMinimumHeight(150)  # Increase as needed
-
-        main_layout.addWidget(QLabel("Discovered Devices:"))
-        main_layout.addWidget(self.device_table)
-
-        device_action_layout = QHBoxLayout()
-        self.add_running_button = QPushButton("Add to Devices Testing")
-        self.add_running_button.setEnabled(False)
-        self.add_running_button.clicked.connect(self.add_to_running_tests)
-        self.remove_running_button = QPushButton("Remove from Devices Testing")
-        self.remove_running_button.clicked.connect(self.remove_from_running_tests)
-        device_action_layout.addWidget(self.add_running_button)
-        device_action_layout.addWidget(self.remove_running_button)
-        main_layout.addLayout(device_action_layout)
 
         self.running_table = QTableWidget(0, 5)
         self.running_table.setHorizontalHeaderLabels(["Model", "Serial", "IP", "Port", "Status"])
         self.running_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.running_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.running_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.running_table.setMinimumHeight(150)
         self.running_table.itemSelectionChanged.connect(self.on_running_selection_changed)
 
-        main_layout.addWidget(QLabel("Devices Testing:"))
-        self.running_table.setMinimumHeight(150)  # Adjust based on preference
-        main_layout.addWidget(self.running_table)
+        discovered_layout = QVBoxLayout()
+        discovered_label = QLabel("Discovered Devices:")
+        discovered_layout.addWidget(discovered_label)
+        discovered_layout.addWidget(self.device_table)
 
+        running_layout = QVBoxLayout()
+        running_label = QLabel("Devices in Test:")
+        running_layout.addWidget(running_label)
+        running_layout.addWidget(self.running_table)
 
-        status_layout = QVBoxLayout()
-        status_label_title = QLabel("Current Status:")
-        status_layout.addWidget(status_label_title)
+        tables_layout = QHBoxLayout()
+        tables_layout.addLayout(discovered_layout)
+        tables_layout.addLayout(running_layout)
+        tables_layout.setStretch(0, 1)
+        tables_layout.setStretch(1, 1)
+        tables_layout.setSpacing(20)
 
+        main_layout.addLayout(tables_layout)
+
+        # === Add / Remove Buttons ===
+        device_action_layout = QHBoxLayout()
+        self.add_running_button = QPushButton("Add to Testing")
+        self.add_running_button.setEnabled(False)
+        self.add_running_button.clicked.connect(self.add_to_running_tests)
+        self.remove_running_button = QPushButton("Remove from Testing")
+        self.remove_running_button.clicked.connect(self.remove_from_running_tests)
+        device_action_layout.addWidget(self.add_running_button)
+        device_action_layout.addWidget(self.remove_running_button)
+        main_layout.addLayout(device_action_layout)
+
+        # === Current Status Group Box ===
+        main_layout.addSpacing(20)
+        status_group = QGroupBox("Current Device Status")
+        status_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 14pt;
+                margin-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+            }
+        """)
+        status_group_layout = QVBoxLayout()
         self.status_label = QLabel("Status: Idle")
-        status_layout.addWidget(self.status_label)
+        self.status_label.setObjectName("statusLabel")
+        self.status_label.setWordWrap(True)
+        self.status_label.setStyleSheet("""
+            font-size: 13pt;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        """)
+        status_group_layout.addWidget(self.status_label)
+        status_group.setLayout(status_group_layout)
+        main_layout.addWidget(status_group)
 
-        main_layout.addLayout(status_layout)
-
+        # === Controls and Form Inputs ===
         control_layout = QHBoxLayout()
         self.start_button = QPushButton("Start Test")
         self.stop_button = QPushButton("Stop Test")
@@ -92,11 +130,19 @@ class MainWindow(QWidget):
         control_container.addLayout(form_layout)
         main_layout.addLayout(control_container)
 
+        self.selected_device_label = QLabel("Displaying Data for Selected Device: None")
+        self.selected_device_label.setWordWrap(True)
+        self.selected_device_label.setObjectName("statusLabel")  # Use same objectName to share styling
+        main_layout.addWidget(self.selected_device_label)
+
+
+        # === Plot + Log Split View ===
         splitter = QSplitter(Qt.Vertical)
 
+        # Plot Container
         plot_container = QWidget()
         plot_layout = QVBoxLayout(plot_container)
-        self.figure = Figure(figsize=(8, 5), tight_layout=True)
+        self.figure = Figure(figsize=(10, 6), tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.ax = self.figure.add_subplot(111)
@@ -114,32 +160,31 @@ class MainWindow(QWidget):
         graph_btn_layout.addWidget(self.save_graph_button)
         graph_btn_layout.addWidget(self.clear_graph_button)
         plot_layout.addLayout(graph_btn_layout)
-        plot_container.setMinimumHeight(300)  # or any height you prefer
 
+        plot_container.setMinimumHeight(450)
         splitter.addWidget(plot_container)
 
+        # Log Container
         log_container = QWidget()
         log_layout = QVBoxLayout(log_container)
-
-        log_label = QLabel("Test Log Output:")
-        log_layout.addWidget(log_label)
 
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         self.log_output.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.log_output.setMinimumHeight(150)  # Adjust based on preference
+        self.log_output.setMinimumHeight(150)
         log_layout.addWidget(self.log_output)
+
         self.save_log_button = QPushButton("Save Log")
         log_layout.addWidget(self.save_log_button)
-
         splitter.addWidget(log_container)
+
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 1)
-
         main_layout.addWidget(splitter)
 
         self.setLayout(main_layout)
 
+        # === Connect Signals ===
         self.start_button.clicked.connect(self.on_start)
         self.stop_button.clicked.connect(self.on_stop)
         self.save_log_button.clicked.connect(self.save_log)
@@ -148,6 +193,7 @@ class MainWindow(QWidget):
 
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
+
 
     def on_discover(self):
         self.manager.clear_devices()
@@ -229,6 +275,7 @@ class MainWindow(QWidget):
         selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
             self.status_label.setText("Select a running test device to view.")
+            self.selected_device_label.setText("Displaying Data for Selected Device: None")  # Clear label when none selected
             self.log_output.clear()
             self.clear_graph()
             self.set_controls_enabled(False)
@@ -238,9 +285,10 @@ class MainWindow(QWidget):
         self.set_controls_enabled(True)
         row = selected_rows[0].row()
         device = self.manager.running_devices[row]
-        self.status_label.setText(f"Selected device: {device}")
 
-        #self.update_buttons_state(device.serial)
+        device_info = f"{device.model} (S/N: {device.serial})"  # Assuming device has model and serial attributes
+        self.selected_device_label.setText(f"Displaying Data for Selected Device: {device_info}")
+        self.status_label.setText(f"Selected device: {device_info}")
 
         # Update log output
         self.log_output.clear()
@@ -250,8 +298,9 @@ class MainWindow(QWidget):
         # Update plot
         self.update_plot_for_serial(device.serial)
 
-        # ✅ Enable clear graph button only if test is not running
+        # Enable clear graph button only if test is not running
         self.clear_graph_button.setEnabled(not self.manager.is_running(device.serial))
+
 
     def update_log(self, serial):
         self.log_output.clear()
@@ -406,6 +455,12 @@ class MainWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
+    # Load stylesheet
+    with open("style.qss", "r") as f:
+        app.setStyleSheet(f.read())
+
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
+

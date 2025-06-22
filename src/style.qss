@@ -1,0 +1,29 @@
+/* style.qss */
+QGroupBox {
+    font-weight: bold;
+    font-size: 14pt;
+    margin-top: 10; /* Increase from 10px to 30px */
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 3px;
+}
+
+QLabel#statusLabel {
+    font-size: 13pt;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #000000; /* Add this line to ensure text is black */
+}
+
+#statusLabel {
+    font-size: 13pt;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
