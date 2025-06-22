@@ -171,41 +171,47 @@ class MainWindow(QWidget):
         self.add_running_button.setEnabled(bool(self.device_table.selectedItems()))
 
     def add_to_running_tests(self):
-        selected = self.device_table.selectedItems()
-        if not selected:
+        selected_rows = self.device_table.selectionModel().selectedRows()
+        if not selected_rows:
             return
-        row = selected[0].row()
-        device = self.manager.devices[row]
+        row = selected_rows[0].row()
+        device = self.devices[row]
+
+        if any(d.serial == device.serial for d in self.running_devices):
+            QMessageBox.information(self, "Info", f"Device {device.serial} already added.")
+            return
+
         self.manager.add_running_device(device)
 
-        row = self.running_table.rowCount()
-        self.running_table.insertRow(row)
-        self.running_table.setItem(row, 0, QTableWidgetItem(device.model))
-        self.running_table.setItem(row, 1, QTableWidgetItem(device.serial))
-        self.running_table.setItem(row, 2, QTableWidgetItem(device.ip))
-        self.running_table.setItem(row, 3, QTableWidgetItem(str(device.port)))
-        self.running_table.setItem(row, 4, QTableWidgetItem("Idle"))
+        # Add to GUI table
+        row_pos = self.running_table.rowCount()
+        self.running_table.insertRow(row_pos)
+        self.running_table.setItem(row_pos, 0, QTableWidgetItem(device.model))
+        self.running_table.setItem(row_pos, 1, QTableWidgetItem(device.serial))
+        self.running_table.setItem(row_pos, 2, QTableWidgetItem(device.ip))
+        self.running_table.setItem(row_pos, 3, QTableWidgetItem(str(device.port)))
+        self.running_table.setItem(row_pos, 4, QTableWidgetItem(self.manager.get_status(device.serial)))
+
 
     def remove_from_running_tests(self):
-        selected = self.running_table.selectedItems()
-        if not selected:
+        selected_rows = self.running_table.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Device Selected", "Please select a device to remove from the 'Devices Testing' list.")
             return
-        row = selected[0].row()
-        serial = self.running_table.item(row, 1).text()
 
-        # Remove from manager
-        self.manager.remove_running_device(serial)
+        row = selected_rows[0].row()
+        device = self.running_devices[row]
 
-        # Remove from GUI table
+        self.manager.remove_running_device(device.serial)
+        self.running_devices.pop(row)
         self.running_table.removeRow(row)
 
-        # Clear GUI state
-        self.status_label.setText(f"Removed device {serial} from testing.")
+        self.status_label.setText(f"Removed device {device.serial} from testing.")
         self.log_output.clear()
-        self.ax.clear()
-        self.canvas.draw()
+        self.clear_graph()
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
+
 
     def on_running_selection_changed(self):
         selected = self.running_table.selectedItems()
