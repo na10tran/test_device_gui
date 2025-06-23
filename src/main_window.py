@@ -436,10 +436,11 @@ class MainWindow(QWidget):
             device = self.manager.running_devices[row]
 
             # Prevent removal if device is testing
-            if device.worker and device.worker.running:
+            worker, _ = self.manager.get_worker(device.serial)
+            if worker and worker.running:
                 QMessageBox.warning(self, "Warning", f"Device {device.serial} is currently testing and cannot be removed.")
                 continue  # skip removal
-            
+
             self.running_table.blockSignals(True)
             self.manager.remove_running_device(device.serial)    # remove device from device manager 
             self.running_table.removeRow(row)    # removes row from devices in test
