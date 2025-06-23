@@ -547,6 +547,7 @@ class MainWindow(QWidget):
         self.ax.set_xlabel("Time (ms)")
         self.ax.set_ylabel("mV")
         self.ax2.set_ylabel("mA")
+        self.ax2.yaxis.set_label_position('right')
 
         if serial is None:
             points = []
@@ -589,6 +590,7 @@ class MainWindow(QWidget):
             # Optional: color the tick labels to match line colors
             self.ax.tick_params(axis='y', colors='b')
             self.ax2.tick_params(axis='y', colors='r')
+            self.ax2.yaxis.set_ticks_position('right')
 
             # Optionally add legends (on primary axis)
             self.ax.legend(loc='upper left')
