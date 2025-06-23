@@ -202,7 +202,7 @@ class MainWindow(QWidget):
         outer_layout = QVBoxLayout(self)
         outer_layout.addWidget(scroll)
 
-# ------------------------- ON METHPDS -------------------------
+# ------------------------- UI EVENT HANDLER METHODS -------------------------
     def on_discover(self):
         """
             Scans the network for available devices using the discover device command. 
@@ -227,7 +227,6 @@ class MainWindow(QWidget):
             self.status_label.setText("No devices found.")
         else:
             self.status_label.setText(f"{len(devices)} device(s) discovered.")
-            self.add_running_button.setEnabled(False)
 
     def on_start(self):
         """
@@ -393,8 +392,7 @@ class MainWindow(QWidget):
         plot_data = self.manager.get_plot_data(device.serial)
         self.clear_graph_button.setEnabled(bool(plot_data))
 
-
-# ------------------------- ON METHPDS -------------------------
+# ------------------------- DEVICE DATA METHODS -------------------------
     def add_to_running_tests(self):
         """
             Adds a selected device from the discovered devices table to the "Devices in Test" table
@@ -432,12 +430,12 @@ class MainWindow(QWidget):
             Clears graph and log if no devices remain.
 
         """
-        
+
         selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
             return
 
-        # Collect serials to remove first (safe from row shifting)
+        # Collect serials to remove first
         serials_to_remove = []
         for index in selected_rows:
             row = index.row()
@@ -452,7 +450,7 @@ class MainWindow(QWidget):
 
             serials_to_remove.append(serial)
 
-        # Actually remove the devices
+        # remove the devices
         self.running_table.blockSignals(True)
         for serial in serials_to_remove:
             # Remove from manager
@@ -480,7 +478,6 @@ class MainWindow(QWidget):
         else:
             # Refresh UI to match selected device
             self.on_running_selection_changed()
-
 
     def set_controls_enabled(self, enabled):
         """
