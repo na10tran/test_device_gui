@@ -389,9 +389,9 @@ class MainWindow(QWidget):
         # Update graph plot
         self.update_plot(device.serial)
 
-        # Enable Clear Graph if there is any plot data, regardless of running status
-        plot_data = self.manager.get_plot_data(device.serial)
-        self.clear_graph_button.setEnabled(bool(plot_data))
+        # Enable Clear Graph button only if the test is NOT running
+        worker, _ = self.manager.get_worker(device.serial)
+        self.clear_graph_button.setEnabled(not (worker and worker.running))
 
 
 # ------------------------- ON METHPDS -------------------------
