@@ -542,10 +542,10 @@ class MainWindow(QWidget):
             # Add padding
             mv_range = mv_max - mv_min
             ma_range = ma_max - ma_min
-
+            print(mv_min, mv_max)
+            print(ma_min, ma_max)
             self.ax.set_ylim(mv_min - 0.1 * mv_range, mv_max + 0.1 * mv_range)
-            #self.ax2.set_ylim(ma_min - 0.1 * ma_range, ma_max + 0.1 * ma_range)
-            self.ax2.set_ylim(-500, 500)
+            self.ax2.set_ylim(ma_min - 0.1 * ma_range, ma_max + 0.1 * ma_range)
 
             # Plot mV on primary y-axis
             if len(time_ms) > 100:
