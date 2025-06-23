@@ -542,7 +542,7 @@ class MainWindow(QWidget):
         """
 
         self.ax.clear()
-        self.a2.clear()
+        self.ax2.clear()
         self.ax.set_title("Live Test Data" if serial is None else f"Live Test Data for {serial}")
         self.ax.set_xlabel("Time (ms)")
         self.ax.set_ylabel("mV")
