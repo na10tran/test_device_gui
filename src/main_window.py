@@ -447,8 +447,8 @@ class MainWindow(QWidget):
             self.selected_device_label.setText("Displaying Data for Selected Device: None")
             self.log_output.clear()
             self.clear_graph()            
-            #self.update_plot(serial=None)
-            #self.set_controls_enabled(False)
+            self.update_plot(serial=None)
+            self.set_controls_enabled(False)
             #self.clear_graph_button.setEnabled(False)
             #self.remove_running_button.setEnabled(False)
 
