@@ -137,6 +137,15 @@ class DeviceManager:
         self.workers[serial] = worker
         self.threads[serial] = thread
 
+    def get_worker(self, serial):
+        """
+        Returns a tuple (worker, thread) for a given device serial.
+        If not found, returns (None, None).
+
+        """
+        
+        return (self.workers.get(serial), self.threads.get(serial))
+
     def clear_worker(self, serial):
         """
             Remove the worker and thread associated with a device.
