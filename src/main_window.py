@@ -428,41 +428,59 @@ class MainWindow(QWidget):
 
     def remove_from_running_tests(self):
         """
-            Removes the selected device(s) from devices in test table and updates the GUI. 
-            The graph and log display is cleared if no devices remain and the control buttons
-            are also disabled.
-        """
+            Removes the selected device(s) from the test table and updates the GUI.
+            Clears graph and log if no devices remain.
 
-        selected_rows = self.running_table.selectionModel().selectedRows()    # gets selected row(s)
+        """
+        
+        selected_rows = self.running_table.selectionModel().selectedRows()
         if not selected_rows:
             return
 
-        for selected in selected_rows:
-            row = selected.row()
+        # Collect serials to remove first (safe from row shifting)
+        serials_to_remove = []
+        for index in selected_rows:
+            row = index.row()
             device = self.manager.running_devices[row]
+            serial = device.serial
 
-            # Prevent removal if device is testing
-            worker, _ = self.manager.get_worker(device.serial)
+            # Check if running
+            worker, _ = self.manager.get_worker(serial)
             if worker and worker.running:
-                QMessageBox.warning(self, "Warning", f"Device {device.serial} is currently testing and cannot be removed.")
-                continue  # skip removal
+                QMessageBox.warning(self, "Warning", f"Device {serial} is currently testing and cannot be removed.")
+                continue
 
-            self.manager.remove_running_device(device.serial)    # remove device from device manager 
-            self.running_table.blockSignals(True)
-            self.running_table.removeRow(row)    # removes row from devices in test
-            self.running_table.blockSignals(False)
+            serials_to_remove.append(serial)
 
-        if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
+        # Actually remove the devices
+        self.running_table.blockSignals(True)
+        for serial in serials_to_remove:
+            # Remove from manager
+            self.manager.remove_running_device(serial)
+
+            # Find the row with that serial and remove it
+            for row in range(self.running_table.rowCount()):
+                if self.running_table.item(row, 1).text() == serial:
+                    self.running_table.removeRow(row)
+                    break
+        self.running_table.blockSignals(False)
+
+        # If no devices remain
+        if self.running_table.rowCount() == 0:
             self.running_table.clearSelection()
             self.running_table.setCurrentCell(-1, -1)
             self.remove_running_button.setEnabled(False)
             self.status_label.setText("Status: Idle")
             self.selected_device_label.setText("Displaying Data for Selected Device: None")
             self.log_output.clear()
-            self.clear_graph()            
+            self.clear_graph()
             self.update_plot(serial=None)
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
+        else:
+            # Refresh UI to match selected device
+            self.on_running_selection_changed()
+
 
     def set_controls_enabled(self, enabled):
         """
