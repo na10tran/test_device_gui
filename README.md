@@ -2,7 +2,9 @@ Device Test GUI — Build & Run Instructions
 Rocket Lab Production Automation Coding Test – Test Devices
 Created by Nathan Tran
 ==========================================
+
 OVERVIEW
+
 This program provides a graphical interface to discover, monitor, and run tests on network-connected devices.
 Users can:
 - Start and stop tests
@@ -11,7 +13,9 @@ Users can:
 - Manage multiple devices in parallel
 
 ==========================================
+
 PREREQUISITES
+
 • OS: Linux (tested on Ubuntu 20.04+)
 • Python Version: 3.7 or higher
 • Required Python Packages:
@@ -19,7 +23,9 @@ PREREQUISITES
 - matplotlib
 
 ==========================================
+
 INSTALLATION
+
 Step 1 — Install Python and pip:
 sudo apt update
 sudo apt install python3 python3-pip
@@ -28,7 +34,9 @@ Step 2 — Install required Python packages:
 pip3 install PyQt5 matplotlib
 
 ==========================================
+
 RUNNING THE PROGRAM FROM SOURCE
+
 Clone or download the repository:
 
 git clone <repository-url>
@@ -41,7 +49,9 @@ python3 main_window.py
 This will open the Device Test GUI window.
 
 ==========================================
+
 OPTIONAL — BUILDING A STANDALONE EXECUTABLE
+
 You can package the GUI into a standalone binary using PyInstaller so the user doesn’t need to install Python or dependencies.
 
 Step 1 — Install PyInstaller:
@@ -55,7 +65,9 @@ cd dist
 ./main_window
 
 ==========================================
+
 TROUBLESHOOTING
+
 • No Devices Discovered:
 Ensure devices are created and running
 
