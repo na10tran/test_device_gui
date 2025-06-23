@@ -389,9 +389,9 @@ class MainWindow(QWidget):
         # Update graph plot
         self.update_plot(device.serial)
 
-        # Enable Clear Graph button only if the test is NOT running
-        worker, _ = self.manager.get_worker(device.serial)
-        self.clear_graph_button.setEnabled(not (worker and worker.running))
+        # Enable Clear Graph if there is any plot data, regardless of running status
+        plot_data = self.manager.get_plot_data(device.serial)
+        self.clear_graph_button.setEnabled(bool(plot_data))
 
 
 # ------------------------- ON METHPDS -------------------------
@@ -589,6 +589,8 @@ class MainWindow(QWidget):
         # Only allow clearing if test is not running
         if self.manager.is_running(serial):
             self.status_label.setText("Cannot clear graph while test is running.")
+            QMessageBox.warning(self, "Test In Progress",
+                                "Cannot clear graph while test is running.")
             return
 
         # clears stored data for device and refreshes graph
