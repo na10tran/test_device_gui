@@ -568,15 +568,15 @@ class MainWindow(QWidget):
 
             # Plot mV on primary y-axis
             if len(time_ms) > 100:
-                self.ax.plot(time_ms, mv_vals, 'b-', label='Voltage (mV)', linewidth=0.5, markersize=2)
+                self.ax.plot(time_ms, mv_vals, 'bo-', label='Voltage (mV)', linewidth=0.5, markersize=2)
             else:
-                self.ax.plot(time_ms, mv_vals, 'b-', label='Voltage (mV)')
+                self.ax.plot(time_ms, mv_vals, 'bo-', label='Voltage (mV)')
 
             # Create twin y-axis for current (mA)
             if len(time_ms) > 100:
-                self.ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)', linewidth=0.5, markersize=2)
+                self.ax2.plot(time_ms, ma_vals, 'ro-', label='Current (mA)', linewidth=0.5, markersize=2)
             else:
-                self.ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)')
+                self.ax2.plot(time_ms, ma_vals, 'ro-', label='Current (mA)')
 
             # Optional: color the tick labels to match line colors
             self.ax.tick_params(axis='y', colors='b')
