@@ -573,6 +573,10 @@ class MainWindow(QWidget):
             self.ax.set_ylim(mv_min - 0.1 * mv_range, mv_max + 0.1 * mv_range)
             self.ax2.set_ylim(ma_min - 0.1 * ma_range, ma_max + 0.1 * ma_range)
 
+            print(f"Time points: {time_ms[:5]}")
+            print(f"Voltage values (mV): {mv_vals[:5]}")
+            print(f"Current values (mA): {ma_vals[:5]}")
+
             # Plot mV on primary y-axis
             if len(time_ms) > 100:
                 self.ax.plot(time_ms, mv_vals, 'bo-', label='Voltage (mV)', linewidth=0.5, markersize=2)
