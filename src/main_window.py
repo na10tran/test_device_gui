@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QHBoxLayout, QTextEdit, QSizePolicy, QFileDialog, QLineEdit,
     QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView,
-    QSplitter, QGroupBox, QScrollArea
+    QSplitter, QGroupBox, QScrollArea, QTimer
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -442,7 +442,6 @@ class MainWindow(QWidget):
         if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
             self.running_table.clearSelection()
             self.running_table.setCurrentCell(-1, -1)
-            self.running_table.scrollToTop()    # prevents scrolling to bottom in gui
             self.status_label.setText("Status: Idle")
             self.selected_device_label.setText("Displaying Data for Selected Device: None")
             self.log_output.clear()
@@ -451,6 +450,7 @@ class MainWindow(QWidget):
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
             self.remove_running_button.setEnabled(False)
+            QTimer.singleShot(0, self.running_table.scrollToTop)
 
     def set_controls_enabled(self, enabled):
         """
