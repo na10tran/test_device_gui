@@ -1,5 +1,4 @@
 import sys
-import socket
 import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
@@ -14,8 +13,6 @@ from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationTo
 from matplotlib.figure import Figure
 
 from device_worker import DeviceWorker
-import constants
-from device import Device
 from device_manager import DeviceManager
 
 class MainWindow(QWidget):
@@ -224,220 +221,45 @@ class MainWindow(QWidget):
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
 
+# ------------------------- ON METHPDS -------------------------
     def on_discover(self):
-        self.manager.clear_devices()
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.settimeout(2)
-        message = b"ID;"
-        sock.sendto(message, (constants.MULTICAST_ADDR, constants.MULTICAST_PORT))
-        try:
-            while True:
-                data, (ip, port) = sock.recvfrom(1024)
-                decoded = data.decode('latin-1')
-                parts = decoded.split(';')
-                model = parts[1].split('=')[1]
-                serial = parts[2].split('=')[1]
-                self.manager.add_device(Device(ip, port, model, serial))
-        except socket.timeout:
-            pass
-        sock.close()
+        """
+            Scans the network for available devices using the discover device command. 
+            Devices are discovered over the network via a multicast UDP request handled inside the DeviceManager.
+
+        """
+
+        devices = self.manager.discover_devices()    # finds devices via UDP
 
         self.device_table.setRowCount(0)
-        for device in self.manager.devices:
+        for device in devices:    # adds each device found
             row = self.device_table.rowCount()
             self.device_table.insertRow(row)
-            self.device_table.setItem(row, 0, QTableWidgetItem(device.model))
-            self.device_table.setItem(row, 1, QTableWidgetItem(device.serial))
-            self.device_table.setItem(row, 2, QTableWidgetItem(device.ip))
-            self.device_table.setItem(row, 3, QTableWidgetItem(str(device.port)))
+            self.device_table.setItem(row, 0, self.create_readonly_item(device.model))
+            self.device_table.setItem(row, 1, self.create_readonly_item(device.serial))
+            self.device_table.setItem(row, 2, self.create_readonly_item(device.ip))
+            self.device_table.setItem(row, 3, self.create_readonly_item(str(device.port)))
 
-        self.add_running_button.setEnabled(False)
-        if not self.manager.devices:
+        #self.add_running_button.setEnabled(False)   
+
+        if not devices:
             self.status_label.setText("🔍 No devices found.")
         else:
-            self.status_label.setText(f"✅ {len(self.manager.devices)} device(s) discovered.")
-
-    def on_discovered_selection_changed(self):
-        self.add_running_button.setEnabled(bool(self.device_table.selectedItems()))
-
-    def add_to_running_tests(self):
-        selected_rows = self.device_table.selectionModel().selectedRows()
-        if not selected_rows:
-            return
-        row = selected_rows[0].row()
-        device = self.manager.devices[row]
-
-        if any(d.serial == device.serial for d in self.manager.running_devices):
-            QMessageBox.information(self, "Info", f"Device {device.serial} already added.")
-            return
-
-        self.manager.add_running_device(device)
-
-        # Add to GUI table
-        row_pos = self.running_table.rowCount()
-        self.running_table.insertRow(row_pos)
-        self.running_table.setItem(row_pos, 0, QTableWidgetItem(device.model))
-        self.running_table.setItem(row_pos, 1, QTableWidgetItem(device.serial))
-        self.running_table.setItem(row_pos, 2, QTableWidgetItem(device.ip))
-        self.running_table.setItem(row_pos, 3, QTableWidgetItem(str(device.port)))
-        self.running_table.setItem(row_pos, 4, QTableWidgetItem(self.manager.get_status(device.serial)))
-
-        # Apply color styling based on initial status
-        self.apply_row_style(row_pos, self.manager.get_status(device.serial))
-
-    def apply_row_style(self, row, status):
-        color = QColor()
-        if "running" in status.lower():
-            color = QColor(255, 255, 204)  # Light yellow
-        elif "finished" in status.lower() or "complete" in status.lower():
-            color = QColor(204, 255, 204)  # Light green
-        else:
-            return  # No special styling
-
-        for col in range(self.running_table.columnCount()):
-            self.running_table.item(row, col).setBackground(color)
-
-    def remove_from_running_tests(self):
-        selected_rows = self.running_table.selectionModel().selectedRows()
-        if not selected_rows:
-            return
-
-        for selected in selected_rows:
-            row = selected.row()
-            device = self.manager.running_devices[row]
-            self.manager.remove_running_device(device.serial)
-            self.running_table.removeRow(row)
-
-        if self.running_table.rowCount() == 0:
-            self.status_label.setText("Status: Idle")
-            self.log_output.clear()
-            self.clear_graph()
-            self.set_controls_enabled(False)
-            self.clear_graph_button.setEnabled(False)
-            self.show_no_data_plot()
-
-    def show_no_data_plot(self):
-        self.ax.clear()
-        self.ax.set_title("Live Test Data")
-        self.ax.set_xlabel("Time (ms)")
-        self.ax.set_ylabel("mV")
-        self.ax.text(
-            0.5, 0.5, "No data",
-            transform=self.ax.transAxes,
-            ha='center', va='center',
-            fontsize=12, color='gray'
-        )
-        self.canvas.draw()
-
-
-    def on_running_selection_changed(self):
-        selected_rows = self.running_table.selectionModel().selectedRows()
-        if not selected_rows:
-            #self.status_label.setText("Select a running test device to view.")
-            self.selected_device_label.setText("Displaying Data for Selected Device: None")  # Clear label when none selected
-            self.log_output.clear()
-            self.clear_graph()
-            self.set_controls_enabled(False)
-            self.clear_graph_button.setEnabled(False)
-            return
-
-        self.set_controls_enabled(True)
-        row = selected_rows[0].row()
-        device = self.manager.running_devices[row]
-
-        device_info = f"{device.model} (S/N: {device.serial})"  # Assuming device has model and serial attributes
-        self.selected_device_label.setText(f"Displaying Data for Selected Device: {device_info}")
-        self.status_label.setText(f"Selected device: {device_info}")
-
-        # Update log output
-        self.log_output.clear()
-        for line in self.manager.get_log(device.serial):
-            self.log_output.append(line)
-
-        # Update plot
-        self.update_plot_for_serial(device.serial)
-
-        # Enable clear graph button only if test is not running
-        self.clear_graph_button.setEnabled(not self.manager.is_running(device.serial))
-
-
-    def update_log(self, serial):
-        self.log_output.clear()
-        for line in self.manager.get_log(serial):
-            self.log_output.append(line)
-
-    def update_plot(self, serial):
-        self.ax.clear()
-        self.ax.set_title(f"Live Test Data for {serial}")
-        self.ax.set_xlabel("Time (ms)")
-        self.ax.set_ylabel("mV")
-        points = self.manager.get_plot_data(serial)
-        if points:
-            x, y = zip(*points)
-            self.ax.plot(x, y, 'bo-')
-        self.canvas.draw()
-
-    def set_controls_enabled(self, enabled):
-        self.start_button.setEnabled(enabled)
-        self.stop_button.setEnabled(enabled)
-        self.save_log_button.setEnabled(enabled)
-        self.save_graph_button.setEnabled(enabled)
-        self.duration_input.setEnabled(enabled)
-        self.rate_input.setEnabled(enabled)
-
-    def get_selected_running_serial(self):
-        selected_rows = self.running_table.selectionModel().selectedRows()
-        if not selected_rows:
-            return None
-        row = selected_rows[0].row()
-        device = self.manager.running_devices[row]
-        return device.serial
-
-    def clear_graph(self):
-        serial = self.get_selected_running_serial()
-        if not serial:
-            self.status_label.setText("⚠️ Select a running test device to clear its graph.")
-            return
-
-        # Only allow clearing if test is NOT running
-        if self.manager.is_running(serial):
-            self.status_label.setText("Cannot clear graph while test is running.")
-            return
-
-        self.manager.clear_plot(serial)
-        self.update_plot_for_serial(serial)
-
-        self.manager.append_log(serial, "🧹 Graph cleared.")
-        if self.get_selected_running_serial() == serial:
-            self.log_output.append("🧹 Graph cleared.")
-
-
-    def save_log(self):
-        selected = self.running_table.selectedItems()
-        if not selected:
-            return
-        row = selected[0].row()
-        serial = self.running_table.item(row, 1).text()
-        lines = self.manager.get_log(serial)
-        if not lines:
-            return
-
-        path, _ = QFileDialog.getSaveFileName(self, "Save Log", f"log_{serial}.txt")
-        if path:
-            with open(path, 'w') as f:
-                f.write('\n'.join(lines))
-
-    def save_graph(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save Graph", "graph.png")
-        if path:
-            self.figure.savefig(path)
+            self.status_label.setText(f"{len(devices)} device(s) discovered.")
+            self.add_running_button.setEnabled(False)
 
     def on_start(self):
+        """
+            Starts the test for the selected device. It uses the input fields and starts a 
+            DeviceWorker in a new thread to perform the test. The UI is updated accordingly.
+
+        """
+
         selected = self.running_table.selectedItems()
         if not selected:
             return
         row = selected[0].row()
-        serial = self.running_table.item(row, 1).text()
+        serial = self.running_table.item(row, 1).text()    # Get device serial from table
         device = next((d for d in self.manager.running_devices if d.serial == serial), None)
         if not device:
             return
@@ -449,42 +271,50 @@ class MainWindow(QWidget):
 
         self.manager.clear_plot(serial)
         self.manager.append_log(serial, f"▶️ Start Test: {duration}s @ {rate}ms")
-        self.update_log(serial)
+        self.update_log(serial)    #update log display box
 
-        worker = DeviceWorker(device, duration=duration, rate=rate)
+        worker = DeviceWorker(device, duration=duration, rate=rate)    # create a worker for the test
+        # Connect signals to handle status updates, data points, and test completion
         worker.status_signal.connect(lambda msg: self.on_status(serial, msg))
         worker.data_signal.connect(lambda t, mv: self.on_data(serial, t, mv))
         worker.finished_signal.connect(lambda: self.on_finished(serial))
 
-        thread = threading.Thread(target=worker.start_test)
+        thread = threading.Thread(target=worker.start_test)    # Run worker in a background thread
         thread.start()
 
-        self.manager.set_worker(serial, worker, thread)
+        self.manager.set_worker(serial, worker, thread)    # Save worker and thread references
+        #self.update_status_column(serial, "Testing")  
 
     def on_stop(self):
+        """
+            Stops the currently selected running device's test and updates the log.
+
+        """
+
         selected = self.running_table.selectedItems()
         if not selected:
             return
         row = selected[0].row()
         serial = self.running_table.item(row, 1).text()
         worker = self.manager.workers.get(serial)
+
+        # stops the worker test and logs action
         if worker:
             worker.stop_test()
             self.manager.append_log(serial, "Stop Test")
             self.update_log(serial)
-
-    def on_status(self, serial, msg):
-        self.manager.append_log(serial, msg)
-        self.update_log(serial)
-
-        # Find row for this serial
-        for row in range(self.running_table.rowCount()):
-            if self.running_table.item(row, 1).text() == serial:
-                self.running_table.setItem(row, 4, QTableWidgetItem(self.manager.get_status(serial)))
-                self.apply_row_style(row, self.manager.get_status(serial))
-                break
-
+    
     def on_data(self, serial, t, mv):
+        """
+            Handles incoming data point from a running test device. Appends data point to plot
+            and updates plot UI
+
+            :param serial (string) The serial number of the device
+            :param t (int) The timestamp (in milliseconds) of the data point.
+            :param mv (float) The measured value in millivolts.
+
+        """
+
         self.manager.append_plot_data(serial, t, mv)
 
         # Only update the plot if this device is currently selected
@@ -493,31 +323,330 @@ class MainWindow(QWidget):
             self.update_plot(serial)
 
     def on_finished(self, serial):
-        self.manager.append_log(serial, "✅ Test Finished")
+        """
+            Handles the completion of a test for a specific device. Triggered when DeviceWorker
+            signals that the test is finished.
+
+            :param serial (string) The serial number of the device
+
+        """
+
+        self.manager.append_log(serial, "Test Finished")
         self.manager.clear_worker(serial)
         self.update_log(serial)
         self.set_controls_enabled(True)
+        self.update_status_column(serial, "Completed")
 
-    def update_plot_for_serial(self, serial):
-        """Redraws the plot for a specific device based on its collected test data."""
-        points = self.manager.get_plot_data(serial)
+    def on_status(self, serial, msg):
+        """
+            Handles incoming status messages during a running test. This method logs the status message, 
+            updates the log view and test status in the UI
+
+            :param serial (string) The serial number of the device
+            :param msg (string) The status message received from the device.
+
+        """
+
+        self.manager.append_log(serial, msg)
+        self.update_log(serial)
+        self.update_status_column(serial, "Testing")  # Update to Testing
+
+        # Find row for the device's serial
+        for row in range(self.running_table.rowCount()):
+            if self.running_table.item(row, 1).text() == serial:
+                # update status cell with current status from manager 
+                self.running_table.setItem(row, 4, QTableWidgetItem(self.manager.get_status(serial)))
+                break
+
+    def on_discovered_selection_changed(self):
+        """
+            Enables "Add to Testing" button only if a device is selected
+            in the discovered devices table. Prevents users from adding
+            devices to testing when none are selected.
+        """
+
+        self.add_running_button.setEnabled(bool(self.device_table.selectedItems()))
+
+    def on_running_selection_changed(self):
+        """
+            Handles the event when the selection in the devices in test table changes.
+            The graph, log, status labels, and controls are updated accordingly.
+        """
+        
+        selected_rows = self.running_table.selectionModel().selectedRows()
+
+        if not selected_rows:
+            self.selected_device_label.setText("Displaying Data for Selected Device: None")  # Clear label when none selected
+            self.log_output.clear()
+            self.clear_graph()
+            self.set_controls_enabled(False)
+            self.clear_graph_button.setEnabled(False)
+            self.remove_running_button.setEnabled(False)    # disables removw from testing button
+            return
+
+        self.set_controls_enabled(True)    # enables input fields and controls
+        self.remove_running_button.setEnabled(True)    # enables remove from testing button
+
+        row = selected_rows[0].row()
+        device = self.manager.running_devices[row]
+
+        device_info = f"{device.model} (S/N: {device.serial})" 
+        self.selected_device_label.setText(f"Displaying Data for Selected Device: {device_info}")
+        self.status_label.setText(f"Selected device: {device_info}")
+
+        # Updates log output
+        self.log_output.clear()
+        for line in self.manager.get_log(device.serial):
+            self.log_output.append(line)
+
+        # Update graph plot
+        self.update_plot(device.serial)
+
+        # Enable clear graph button only if test is not running
+        self.clear_graph_button.setEnabled(not self.manager.is_running(device.serial))
+
+# ------------------------- ON METHPDS -------------------------
+    def add_to_running_tests(self):
+        """
+            Adds a selected device from the discovered devices table to the "Devices in Test" table
+            and updates the internal manager to track the device as running(idle state)
+
+        """
+
+        selected_rows = self.device_table.selectionModel().selectedRows()    # grabs selected row in discovered devices
+        if not selected_rows:
+            return
+        
+        row = selected_rows[0].row()
+        device = self.manager.devices[row]
+
+        if any(d.serial == device.serial for d in self.manager.running_devices):
+            QMessageBox.information(self, "Info", f"Device {device.serial} already added.")
+            return
+
+        self.manager.add_running_device(device)
+
+        # Add to devices in test table
+        row_pos = self.running_table.rowCount()
+        self.running_table.insertRow(row_pos)
+        self.running_table.setItem(row_pos, 0, self.create_readonly_item(device.model))
+        self.running_table.setItem(row_pos, 1, self.create_readonly_item(device.serial))
+        self.running_table.setItem(row_pos, 2, self.create_readonly_item(device.ip))
+        self.running_table.setItem(row_pos, 3, self.create_readonly_item(str(device.port)))
+        self.running_table.setItem(row_pos, 4, self.create_readonly_item(self.manager.get_status(device.serial)))
+
+        self.running_table.setItem(row_pos, 4, QTableWidgetItem("Idle"))
+        self.style_row_by_status(row_pos, "Idle")
+
+    def remove_from_running_tests(self):
+        """
+            Removes the selected device(s) from devices in test table and updates the GUI. 
+            The graph and log display is cleared if no devices remain and the control buttons
+            are also disabled.
+        """
+
+        selected_rows = self.running_table.selectionModel().selectedRows()    # gets selected row(s)
+        if not selected_rows:
+            return
+
+        for selected in selected_rows:
+            row = selected.row()
+            device = self.manager.running_devices[row]
+            self.manager.remove_running_device(device.serial)    # remove device from device manager 
+            self.running_table.removeRow(row)    # removes row from devices in test
+
+        if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
+            self.status_label.setText("Status: Idle")
+            self.selected_device_label.setText("Displaying Data for Selected Device: None")
+            self.log_output.clear()
+            self.clear_graph()            
+            self.update_plot(serial=None)
+            self.set_controls_enabled(False)
+            self.clear_graph_button.setEnabled(False)
+            self.remove_running_button.setEnabled(False)
+
+    def set_controls_enabled(self, enabled):
+        """
+            Enable or disable test device control UI elements.
+
+            :param enabled (bool) boolean to determine if control input and buttons are to be disabled
+        """
+
+        self.start_button.setEnabled(enabled)
+        self.stop_button.setEnabled(enabled)
+        self.save_log_button.setEnabled(enabled)
+        self.save_graph_button.setEnabled(enabled)
+        self.duration_input.setEnabled(enabled)
+        self.rate_input.setEnabled(enabled)
+
+    def update_status_column(self, serial, status):
+        """
+            Updates the status column in the running devices table for a specific device.
+
+            :param serial (string) The serial number of the device
+            :param status (string) The new status to display (e.g: "Testing", "Completed")
+
+        """
+
+        for row in range(self.running_table.rowCount()):
+            item = self.running_table.item(row, 1)    # gets serial number (col 1)
+            if item and item.text() == serial:
+                status_item = QTableWidgetItem(status)
+                status_item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)    # Make it read-only
+                self.running_table.setItem(row, 4, status_item)
+                self.running_table.viewport().update()
+
+                break
+
+    def get_selected_running_serial(self):
+        """
+            Get the serial number of the currently selected device in the devices in test table.
+
+        """
+
+        selected_rows = self.running_table.selectionModel().selectedRows()
+        if not selected_rows:
+            return None
+        row = selected_rows[0].row()
+        device = self.manager.running_devices[row]
+        return device.serial
+ 
+ # ------------------------- DEVICE DATA METHPDS -------------------------   
+    def update_plot(self, serial=None):
+        """
+            Updates the plot area with test data for a given device serial number or displays no data if no device.
+
+            :param serial (string or None) The serial number of the device.
+        """
+
         self.ax.clear()
-        self.ax.set_title(f"Live Test Data for {serial}")
+        self.ax.set_title("Live Test Data" if serial is None else f"Live Test Data for {serial}")
         self.ax.set_xlabel("Time (ms)")
         self.ax.set_ylabel("mV")
+
+        if serial is None:
+            points = []
+        else:
+            points = self.manager.get_plot_data(serial)
 
         if points:
             x, y = zip(*points)
             if len(x) > 100:
-                self.ax.plot(x, y, 'bo-', markersize=2, linewidth=0.5)
+                self.ax.plot(x, y, 'bo-', markersize=1, linewidth=0.25)
             else:
                 self.ax.plot(x, y, 'bo-')
         else:
-            self.ax.text(0.5, 0.5, "No data", transform=self.ax.transAxes,
-                        ha='center', va='center', fontsize=12, color='gray')
-
+            self.ax.text(
+                0.5, 0.5, "No data",
+                transform=self.ax.transAxes,
+                ha='center', va='center',
+                fontsize=12, color='gray'
+            )
         self.canvas.draw()
 
+    def clear_graph(self):
+        """
+            Clears the plotted graph for the currently selected running test device,
+            if a device is selected and its test is not actively running.
+
+        """
+
+        serial = self.get_selected_running_serial()
+        if not serial:
+            self.status_label.setText("Select a running test device to clear its graph.")
+            return
+
+        # Only allow clearing if test is not running
+        if self.manager.is_running(serial):
+            self.status_label.setText("Cannot clear graph while test is running.")
+            return
+
+        # clears stored data for device and refreshes graph
+        self.manager.clear_plot(serial)    
+        self.update_plot(serial)
+
+        # Log and show message if the cleared device is currently selected
+        self.manager.append_log(serial, "Graph cleared.")
+        if self.get_selected_running_serial() == serial:
+            self.log_output.append("Graph cleared.")
+
+    def save_graph(self):
+        """
+            Saves the current graph as an image file.
+
+        """
+
+        # opens save file dialog to save graph image
+        path, _ = QFileDialog.getSaveFileName(self, "Save Graph", "graph.png")
+        if path:
+            self.figure.savefig(path)
+
+    def update_log(self, serial):
+        """
+            Updates the log display with messages for the specified device.
+
+            :param serial (string) serial number of the device whose log messages should be displayed.
+        """
+
+        self.log_output.clear()
+        for line in self.manager.get_log(serial):
+            self.log_output.append(line)
+
+    def save_log(self):
+        """
+            Saves the log of the currently selected running device to a user-specified txt file.
+
+        """
+
+        selected = self.running_table.selectedItems()
+
+        if not selected:
+            return
+        
+        # grabs log data from selected device
+        row = selected[0].row()
+        serial = self.running_table.item(row, 1).text()
+        lines = self.manager.get_log(serial)
+        if not lines:
+            return
+
+        # opens save file dialog to save log
+        path, _ = QFileDialog.getSaveFileName(self, "Save Log", f"log_{serial}.txt")
+        if path:
+            with open(path, 'w') as f:
+                f.write('\n'.join(lines))
+
+ # ------------------------- UI EDITING METHODS -------------------------   
+    def create_readonly_item(self, text):
+        """
+            Creates a non-editable QTableWidgetItem with the given text string.
+
+            :param text (string) text to display in the table cell
+        """
+
+        item = QTableWidgetItem(text)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        return item
+
+    def apply_row_style(self, row, status):
+        """
+            Applies background color styling to a row in the running devices table
+            based on the test status of the device.
+
+            :param row: (int) Row index to apply the style.
+            :param status: (str) The current status string of the device
+        """
+
+        color = QColor()
+        if "running" in status.lower():
+            color = QColor(255, 255, 204)    # Light yellow
+        elif "finished" in status.lower() or "complete" in status.lower():
+            color = QColor(204, 255, 204)    # Light green
+        else:
+            return  
+
+        for col in range(self.running_table.columnCount()):    # changes all columns in row
+            self.running_table.item(row, col).setBackground(color)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
