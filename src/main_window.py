@@ -480,6 +480,7 @@ class MainWindow(QWidget):
             self.running_table.blockSignals(False)
 
         if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
+            self.running_table.scrollToTop()    # prevents scrolling to bottom in gui
             self.status_label.setText("Status: Idle")
             self.selected_device_label.setText("Displaying Data for Selected Device: None")
             self.log_output.clear()
