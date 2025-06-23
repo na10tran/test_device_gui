@@ -475,6 +475,7 @@ class MainWindow(QWidget):
             row = selected.row()
             device = self.manager.running_devices[row]
             self.manager.remove_running_device(device.serial)    # remove device from device manager 
+            self.running_table.blockSignals(True)
             self.running_table.removeRow(row)    # removes row from devices in test
 
         if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
