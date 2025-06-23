@@ -561,20 +561,18 @@ class MainWindow(QWidget):
                 self.ax.plot(time_ms, mv_vals, 'b-', label='Voltage (mV)')
 
             # Create twin y-axis for current (mA)
-            ax2 = self.ax.twinx()
-            ax2.set_ylabel("mA", color='r')
             if len(time_ms) > 100:
-                ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)', linewidth=0.5, markersize=2)
+                self.ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)', linewidth=0.5, markersize=2)
             else:
-                ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)')
+                self.ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)')
 
             # Optional: color the tick labels to match line colors
             self.ax.tick_params(axis='y', colors='b')
-            ax2.tick_params(axis='y', colors='r')
+            self.ax2.tick_params(axis='y', colors='r')
 
             # Optionally add legends (on primary axis)
             self.ax.legend(loc='upper left')
-            ax2.legend(loc='upper right')
+            self.ax2.legend(loc='upper right')
 
         else:
             self.ax.text(
