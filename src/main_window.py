@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView,
     QSplitter, QGroupBox, QScrollArea
 )
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
