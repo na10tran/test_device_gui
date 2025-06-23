@@ -71,15 +71,22 @@ class DeviceWorker(QObject):
                         parts = message.split(';')
                         time_ms = None
                         mv = None
+                        ma = None
                         for part in parts:
                             if part.startswith("TIME="):
                                 time_ms = int(part.split('=')[1])
                             elif part.startswith("MV="):
                                 mv = float(part.split('=')[1])
+                            elif part.startswith("MA="):
+                                ma = float(part.split('=')[1])
 
-                        if time_ms is not None and mv is not None:
-                            self.data_signal.emit(time_ms, mv)
-                            self.collected_data.append((time_ms, mv))
+                        if time_ms is not None and mv is not None and ma is not None:
+                            # You might want to emit a new signal with both MV and MA
+                            # Or for now, append them together in collected_data
+                            self.data_signal.emit(time_ms, mv)  # keep current mv signal if you want
+                            # Example: You can add a new signal for MA, or change data_signal to include ma
+                            # For now, let's just store both together:
+                            self.collected_data.append((time_ms, mv, ma))
 
                     if "STATE=IDLE" in message:
                         break

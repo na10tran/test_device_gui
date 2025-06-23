@@ -179,17 +179,18 @@ class DeviceManager:
 
         return self.plot_data.get(serial, [])
 
-    def append_plot_data(self, serial, time_ms, mv):
+    def append_plot_data(self, serial, time_ms, mv, ma):
         """
             Append a new (time, voltage) data point for plotting.
 
             :param serial (string) Serial number of the device.
             :param time_ms (int) Time in milliseconds.
             :param mv (float) Voltage in millivolts.
+            :param ma (float) Amps in milliamps.
 
         """
 
-        self.plot_data.setdefault(serial, []).append((time_ms, mv))
+        self.plot_data.setdefault(serial, []).append((time_ms, mv, ma))
 
     def update_status(self, serial, status):
         """

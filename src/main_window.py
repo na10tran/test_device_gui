@@ -315,18 +315,19 @@ class MainWindow(QWidget):
             self.manager.append_log(serial, "Stop Test")
             self.update_log(serial)
     
-    def on_data(self, serial, t, mv):
+    def on_data(self, serial, t, mv, ma):
         """
             Handles incoming data point from a running test device. Appends data point to plot
             and updates plot UI
 
             :param serial (string) The serial number of the device
             :param t (int) The timestamp (in milliseconds) of the data point.
-            :param mv (float) The measured value in millivolts.
+            :param mv (float) The measured voltage value in millivolts.
+            :param ma (float) The measured amp value in milliamps.
 
         """
 
-        self.manager.append_plot_data(serial, t, mv)
+        self.manager.append_plot_data(serial, t, mv, ma)
 
         # Only update the plot if this device is currently selected
         current_serial = self.get_selected_running_serial()
@@ -538,14 +539,33 @@ class MainWindow(QWidget):
         if serial is None:
             points = []
         else:
-            points = self.manager.get_plot_data(serial)
+            points = self.manager.get_plot_data(serial)  # expecting list of (time_ms, mv, ma)
 
         if points:
-            x, y = zip(*points)
-            if len(x) > 100:
-                self.ax.plot(x, y, 'bo-', markersize=1, linewidth=0.25)
+            time_ms, mv_vals, ma_vals = zip(*points)
+
+            # Plot mV on primary y-axis
+            if len(time_ms) > 100:
+                self.ax.plot(time_ms, mv_vals, 'b-', label='Voltage (mV)', linewidth=0.5, markersize=2)
             else:
-                self.ax.plot(x, y, 'bo-')
+                self.ax.plot(time_ms, mv_vals, 'b-', label='Voltage (mV)')
+
+            # Create twin y-axis for current (mA)
+            ax2 = self.ax.twinx()
+            ax2.set_ylabel("mA", color='r')
+            if len(time_ms) > 100:
+                ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)', linewidth=0.5, markersize=2)
+            else:
+                ax2.plot(time_ms, ma_vals, 'r-', label='Current (mA)')
+
+            # Optional: color the tick labels to match line colors
+            self.ax.tick_params(axis='y', colors='b')
+            ax2.tick_params(axis='y', colors='r')
+
+            # Optionally add legends (on primary axis)
+            self.ax.legend(loc='upper left')
+            ax2.legend(loc='upper right')
+
         else:
             self.ax.text(
                 0.5, 0.5, "No data",
@@ -554,6 +574,7 @@ class MainWindow(QWidget):
                 fontsize=12, color='gray'
             )
         self.canvas.draw()
+
 
     def clear_graph(self):
         """
