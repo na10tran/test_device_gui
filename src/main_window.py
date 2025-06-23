@@ -380,11 +380,6 @@ class MainWindow(QWidget):
         self.selected_device_label.setText(f"Displaying Data for Selected Device: {device_info}")
         self.status_label.setText(f"Selected device: {device_info}")
 
-        
-        # Enable Clear Graph if there is any plot data, regardless of running status
-        plot_data = self.manager.get_plot_data(device.serial)
-        self.clear_graph_button.setEnabled(bool(plot_data))
-
         # Updates log output
         self.log_output.clear()
         for line in self.manager.get_log(device.serial):
@@ -392,6 +387,10 @@ class MainWindow(QWidget):
 
         # Update graph plot
         self.update_plot(device.serial)
+
+        # Enable Clear Graph if there is any plot data, regardless of running status
+        plot_data = self.manager.get_plot_data(device.serial)
+        self.clear_graph_button.setEnabled(bool(plot_data))
 
 
 # ------------------------- ON METHPDS -------------------------
