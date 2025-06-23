@@ -363,7 +363,7 @@ class MainWindow(QWidget):
             self.clear_graph()
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
-            self.remove_running_button.setEnabled(False)    # disables removw from testing button
+            self.remove_running_button.setEnabled(False)    # disables remove from testing button
             return
 
         self.set_controls_enabled(True)    # enables input fields and controls
@@ -442,6 +442,7 @@ class MainWindow(QWidget):
         if self.running_table.rowCount() == 0:    # clears graph, log, and disables controls
             self.running_table.clearSelection()
             self.running_table.setCurrentCell(-1, -1)
+            self.remove_running_button.setEnabled(False)
             self.status_label.setText("Status: Idle")
             self.selected_device_label.setText("Displaying Data for Selected Device: None")
             self.log_output.clear()
@@ -449,8 +450,6 @@ class MainWindow(QWidget):
             self.update_plot(serial=None)
             self.set_controls_enabled(False)
             self.clear_graph_button.setEnabled(False)
-            self.remove_running_button.setEnabled(False)
-            QTimer.singleShot(0, self.running_table.scrollToTop)
 
     def set_controls_enabled(self, enabled):
         """
