@@ -51,7 +51,7 @@ Step 1 — Install PyInstaller:
 pip3 install pyinstaller
 
 Step 2 — Build the executable:
-pyinstaller --onefile main_window.py
+pyinstaller --onefile --add-data "style.qss:." main_window.py
 
 Step 3 — Locate and run the executable:
 cd dist
@@ -73,13 +73,4 @@ Make sure a device is selected
 
 Ensure valid duration and rate are set before starting the test
 
-• PyInstaller Errors:
-
-If matplotlib or PyQt5 are missing after build, refer to PyInstaller docs on hidden imports
-
 ==========================================
-CONTACT / SUPPORT
-For issues, bug reports, or feature requests:
-→ Open an issue in the repository
-→ Or contact the project maintainer
-

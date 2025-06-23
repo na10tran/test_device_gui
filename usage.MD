@@ -59,7 +59,6 @@ This program provides a graphical interface to scan, monitor, and run tests on n
 The program uses the following third-party libraries:
 - **PyQt5** — GUI framework
 - **matplotlib** — for graph plotting
-- **socket** — for UDP communication with devices
 
 
 ---

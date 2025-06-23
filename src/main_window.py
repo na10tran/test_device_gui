@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
     QHBoxLayout, QTextEdit, QSizePolicy, QFileDialog, QLineEdit,
     QFormLayout, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView,
-    QSplitter, QGroupBox
+    QSplitter, QGroupBox, QScrollArea
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -22,8 +22,11 @@ class MainWindow(QWidget):
         self.setWindowTitle("Device Test GUI")
         self.resize(1200, 900)
 
+        # Container widget for entire UI content
+        container = QWidget()
+        container_layout = QVBoxLayout(container)
+
         self.manager = DeviceManager()
-        main_layout = QVBoxLayout(self)
 
         # === Discover Devices ===
         discover_layout = QHBoxLayout()
@@ -32,7 +35,7 @@ class MainWindow(QWidget):
         self.discover_button.clicked.connect(self.on_discover)
         discover_layout.addWidget(self.discover_button)
         discover_layout.addStretch()
-        main_layout.addLayout(discover_layout)
+        container_layout.addLayout(discover_layout)
 
         # === Discovered & Running Tables ===
         self.device_table = QTableWidget(0, 4)
@@ -68,7 +71,7 @@ class MainWindow(QWidget):
         tables_layout.setStretch(1, 1)
         tables_layout.setSpacing(20)
 
-        main_layout.addLayout(tables_layout)
+        container_layout.addLayout(tables_layout)
 
         # === Add/Remove Buttons ===
         device_action_layout = QHBoxLayout()
@@ -80,7 +83,7 @@ class MainWindow(QWidget):
         self.remove_running_button.clicked.connect(self.remove_from_running_tests)
         device_action_layout.addWidget(self.add_running_button)
         device_action_layout.addWidget(self.remove_running_button)
-        main_layout.addLayout(device_action_layout)
+        container_layout.addLayout(device_action_layout)
 
         # === Status Display ===
         status_group = QGroupBox("Current Device Status")
@@ -109,7 +112,7 @@ class MainWindow(QWidget):
         """)
         status_group_layout.addWidget(self.status_label)
         status_group.setLayout(status_group_layout)
-        main_layout.addWidget(status_group)
+        container_layout.addWidget(status_group)
 
         # === Test Control Section ===
         test_control_group = QGroupBox("Test Controls")
@@ -141,7 +144,7 @@ class MainWindow(QWidget):
         test_control_layout.addLayout(control_btn_layout)
         test_control_layout.addLayout(form_layout)
         test_control_group.setLayout(test_control_layout)
-        main_layout.addWidget(test_control_group)
+        container_layout.addWidget(test_control_group)
 
         # === Output Display Section ===
         output_group = QGroupBox("Device Output Display")
@@ -171,7 +174,7 @@ class MainWindow(QWidget):
         # Plot container
         plot_container = QWidget()
         plot_layout = QVBoxLayout(plot_container)
-        self.figure = Figure(figsize=(10, 6), tight_layout=True)
+        self.figure = Figure(figsize=(6, 4), tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.ax = self.figure.add_subplot(111)
@@ -190,7 +193,7 @@ class MainWindow(QWidget):
         graph_btn_layout.addWidget(self.clear_graph_button)
         plot_layout.addLayout(graph_btn_layout)
 
-        plot_container.setMinimumHeight(450)
+        plot_container.setMinimumHeight(200)
         splitter.addWidget(plot_container)
 
         # Log container
@@ -209,11 +212,9 @@ class MainWindow(QWidget):
         splitter.setStretchFactor(1, 1)
         output_group_layout.addWidget(splitter)
         output_group.setLayout(output_group_layout)
-        main_layout.addWidget(output_group)
+        container_layout.addWidget(output_group)
 
-        self.setLayout(main_layout)
-
-        # === Signal Connections ===
+        # === Connect signals ===
         self.start_button.clicked.connect(self.on_start)
         self.stop_button.clicked.connect(self.on_stop)
         self.save_log_button.clicked.connect(self.save_log)
@@ -223,6 +224,14 @@ class MainWindow(QWidget):
         self.set_controls_enabled(False)
         self.clear_graph_button.setEnabled(False)
 
+        # === Scroll Area wrapping container ===
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(container)
+
+        # Set scroll as the only widget of this window
+        outer_layout = QVBoxLayout(self)
+        outer_layout.addWidget(scroll)
 # ------------------------- ON METHPDS -------------------------
     def on_discover(self):
         """
@@ -242,10 +251,10 @@ class MainWindow(QWidget):
             self.device_table.setItem(row, 2, self.create_readonly_item(device.ip))
             self.device_table.setItem(row, 3, self.create_readonly_item(str(device.port)))
 
-        #self.add_running_button.setEnabled(False)   
+        self.add_running_button.setEnabled(False)   
 
         if not devices:
-            self.status_label.setText("🔍 No devices found.")
+            self.status_label.setText("No devices found.")
         else:
             self.status_label.setText(f"{len(devices)} device(s) discovered.")
             self.add_running_button.setEnabled(False)
