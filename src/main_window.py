@@ -1,4 +1,5 @@
 import sys
+import os
 import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel,
@@ -75,6 +76,7 @@ class MainWindow(QWidget):
         self.add_running_button.setEnabled(False)
         self.add_running_button.clicked.connect(self.add_to_running_tests)
         self.remove_running_button = QPushButton("Remove from Testing")
+        self.remove_running_button.setEnabled(False)
         self.remove_running_button.clicked.connect(self.remove_from_running_tests)
         device_action_layout.addWidget(self.add_running_button)
         device_action_layout.addWidget(self.remove_running_button)
@@ -648,11 +650,26 @@ class MainWindow(QWidget):
         for col in range(self.running_table.columnCount()):    # changes all columns in row
             self.running_table.item(row, col).setBackground(color)
 
+
+def resource_path(relative_path):
+    """
+        Get the absolute path to a resource, working both during development
+        and when packaged with PyInstaller.
+
+        :param elative_path (string)The relative path to the resource file.
+
+    """
+
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    # Load stylesheet
-    with open("style.qss", "r") as f:
+    # Load and apply stylesheet
+    style_path = resource_path("style.qss")
+    with open(style_path, "r") as f:
         app.setStyleSheet(f.read())
 
     win = MainWindow()

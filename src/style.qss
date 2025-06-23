@@ -21,7 +21,8 @@ QGroupBox::title {
 
 /* === Table Header === */
 QHeaderView::section {
-    background-color: #ececec;
+    background-color: #d3d3d3; /* light grey */
+    color: black;
     padding: 4px;
     border: 1px solid #bbb;
     font-weight: bold;
@@ -29,6 +30,8 @@ QHeaderView::section {
 
 /* === Table === */
 QTableWidget {
+    background-color: #f0f0f0;
+    color: black;
     border: 1px solid #ccc;
     gridline-color: #ddd;
     selection-background-color: #b0d8ff;

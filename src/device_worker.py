@@ -1,7 +1,6 @@
 from PyQt5.QtCore import pyqtSignal, QObject
 import socket
-import os
-from device import Device
+
 import constants
 
 class DeviceWorker(QObject):
