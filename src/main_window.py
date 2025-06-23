@@ -264,7 +264,7 @@ class MainWindow(QWidget):
         thread.start()
 
         self.manager.set_worker(serial, worker, thread)    # Save worker and thread references
-        #self.update_status_column(serial, "Testing")  
+        self.update_status_column(serial, "Testing")  
 
     def on_stop(self):
         """
@@ -676,10 +676,9 @@ class MainWindow(QWidget):
 
 def resource_path(relative_path):
     """
-        Get the absolute path to a resource, working both during development
-        and when packaged with PyInstaller.
+        Get the absolute path to a resource
 
-        :param elative_path (string)The relative path to the resource file.
+        :param relative_path (string)The relative path to the resource file.
 
     """
 
