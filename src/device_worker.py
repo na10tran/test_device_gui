@@ -32,7 +32,7 @@ class DeviceWorker(QObject):
     """
 
     status_signal = pyqtSignal(str)
-    data_signal = pyqtSignal(int, float)
+    data_signal = pyqtSignal(int, float, float)
     finished_signal = pyqtSignal()
     save_signal = pyqtSignal(list) 
 
