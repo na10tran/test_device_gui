@@ -380,13 +380,12 @@ class MainWindow(QWidget):
         self.selected_device_label.setText(f"Displaying Data for Selected Device: {device_info}")
         self.status_label.setText(f"Selected device: {device_info}")
 
-        status = self.manager.get_status(device.serial)
-        # Enable Clear Graph button only if the device is running or has data
-        if status == "Testing":
+        
+        # Enable Clear Graph only if device is NOT running and plot data exists
+        if not self.manager.is_running(device.serial) and self.manager.get_plot_data(device.serial):
             self.clear_graph_button.setEnabled(True)
         else:
-            plot_data = self.manager.get_plot_data(device.serial)    # enable if plot has any data
-            self.clear_graph_button.setEnabled(bool(plot_data))
+            self.clear_graph_button.setEnabled(False)
 
         # Updates log output
         self.log_output.clear()
@@ -396,8 +395,6 @@ class MainWindow(QWidget):
         # Update graph plot
         self.update_plot(device.serial)
 
-        # Enable clear graph button only if test is not running
-        self.clear_graph_button.setEnabled(not self.manager.is_running(device.serial))
 
 # ------------------------- ON METHPDS -------------------------
     def add_to_running_tests(self):
