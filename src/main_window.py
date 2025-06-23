@@ -270,22 +270,25 @@ class MainWindow(QWidget):
     def on_stop(self):
         """
             Stops the currently selected running device's test and updates the log.
+            Shows a warning if no test is currently running.
 
         """
-
+        
         selected = self.running_table.selectedItems()
         if not selected:
             return
+
         row = selected[0].row()
         serial = self.running_table.item(row, 1).text()
-        worker = self.manager.workers.get(serial)
+        worker, _ = self.manager.get_worker(serial)
 
-        # stops the worker test and logs action
-        if worker:
+        if worker and worker.running:
             worker.stop_test()
             self.manager.append_log(serial, "Stop Test")
             self.update_log(serial)
-    
+        else:
+            QMessageBox.warning(self, "Warning", f"No test is currently running for device {serial}.")
+        
     def on_data(self, serial, t, mv, ma):
         """
             Handles incoming data point from a running test device. Appends data point to plot
