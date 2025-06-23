@@ -572,7 +572,7 @@ class MainWindow(QWidget):
 
             self.ax.set_ylim(mv_min - 0.1 * mv_range, mv_max + 0.1 * mv_range)
             #self.ax2.set_ylim(ma_min - 0.1 * ma_range, ma_max + 0.1 * ma_range)
-            self.ax2.set_ylim(0, 1000)
+            self.ax2.set_ylim(-500, 500)
 
             # Plot mV on primary y-axis
             if len(time_ms) > 100:
