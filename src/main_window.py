@@ -174,13 +174,23 @@ class MainWindow(QWidget):
         # Plot container
         plot_container = QWidget()
         plot_layout = QVBoxLayout(plot_container)
+
         self.figure = Figure(figsize=(6, 4), tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
+
+        # Main axis for voltage (mV)
         self.ax = self.figure.add_subplot(111)
         self.ax.set_title("Live Test Data")
         self.ax.set_xlabel("Time (ms)")
-        self.ax.set_ylabel("mV")
+        self.ax.set_ylabel("mV", color='b')
+        self.ax.tick_params(axis='y', colors='b')
+
+        # Twin axis for current (mA)
+        self.ax2 = self.ax.twinx()
+        self.ax2.set_ylabel("mA", color='r')
+        self.ax2.tick_params(axis='y', colors='r')
+
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         plot_layout.addWidget(self.toolbar)
@@ -448,7 +458,7 @@ class MainWindow(QWidget):
         self.running_table.setItem(row_pos, 4, self.create_readonly_item(self.manager.get_status(device.serial)))
 
         self.running_table.setItem(row_pos, 4, QTableWidgetItem("Idle"))
-        self.style_row_by_status(row_pos, "Idle")
+        self.apply_row_style(row_pos, "Idle")
 
     def remove_from_running_tests(self):
         """
@@ -574,7 +584,6 @@ class MainWindow(QWidget):
                 fontsize=12, color='gray'
             )
         self.canvas.draw()
-
 
     def clear_graph(self):
         """
