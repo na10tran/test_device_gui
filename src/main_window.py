@@ -449,8 +449,8 @@ class MainWindow(QWidget):
             self.clear_graph()            
             self.update_plot(serial=None)
             self.set_controls_enabled(False)
-            #self.clear_graph_button.setEnabled(False)
-            self.remove_running_button.setEnabled(False)
+            self.clear_graph_button.setEnabled(False)
+            #self.remove_running_button.setEnabled(False)
 
     def set_controls_enabled(self, enabled):
         """
