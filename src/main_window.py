@@ -381,11 +381,9 @@ class MainWindow(QWidget):
         self.status_label.setText(f"Selected device: {device_info}")
 
         
-        # Enable Clear Graph only if device is NOT running and plot data exists
-        if not self.manager.is_running(device.serial) and self.manager.get_plot_data(device.serial):
-            self.clear_graph_button.setEnabled(True)
-        else:
-            self.clear_graph_button.setEnabled(False)
+        # Enable Clear Graph if there is any plot data, regardless of running status
+        plot_data = self.manager.get_plot_data(device.serial)
+        self.clear_graph_button.setEnabled(bool(plot_data))
 
         # Updates log output
         self.log_output.clear()
