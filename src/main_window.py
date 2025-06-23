@@ -424,7 +424,7 @@ class MainWindow(QWidget):
         self.running_table.setItem(row_pos, 4, self.create_readonly_item(self.manager.get_status(device.serial)))
 
         self.running_table.setItem(row_pos, 4, QTableWidgetItem("Idle"))
-        #self.apply_row_style(row_pos, "Idle")
+        self.clear_graph_button.setEnabled(True)
 
     def remove_from_running_tests(self):
         """
