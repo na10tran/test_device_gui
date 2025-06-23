@@ -43,7 +43,8 @@ class MainWindow(QWidget):
         self.device_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.device_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.device_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.device_table.setMinimumHeight(150)
+        self.device_table.setMinimumHeight(100)
+        self.device_table.setMaximumHeight(120)
         self.device_table.itemSelectionChanged.connect(self.on_discovered_selection_changed)
 
         self.running_table = QTableWidget(0, 5)
@@ -51,7 +52,8 @@ class MainWindow(QWidget):
         self.running_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.running_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.running_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.running_table.setMinimumHeight(150)
+        self.running_table.setMinimumHeight(100)
+        self.running_table.setMaximumHeight(120)
         self.running_table.itemSelectionChanged.connect(self.on_running_selection_changed)
 
         discovered_layout = QVBoxLayout()
@@ -87,47 +89,16 @@ class MainWindow(QWidget):
 
         # === Status Display ===
         status_group = QGroupBox("Current Device Status")
-        status_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 10pt;
-                margin-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 3px;
-            }
-        """)
         status_group_layout = QVBoxLayout()
         self.status_label = QLabel("Status: Idle")
         self.status_label.setObjectName("statusLabel")
         self.status_label.setWordWrap(True)
-        self.status_label.setStyleSheet("""
-            font-size: 10pt;
-            padding: 10px;
-            background-color: #f4f4f4;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        """)
         status_group_layout.addWidget(self.status_label)
         status_group.setLayout(status_group_layout)
         container_layout.addWidget(status_group)
 
         # === Test Control Section ===
         test_control_group = QGroupBox("Test Controls")
-        test_control_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 10pt;
-                margin-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 3px;
-            }
-        """)
         test_control_layout = QVBoxLayout()
         control_btn_layout = QHBoxLayout()
         self.start_button = QPushButton("Start Test")
@@ -148,18 +119,6 @@ class MainWindow(QWidget):
 
         # === Output Display Section ===
         output_group = QGroupBox("Device Output Display")
-        output_group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 10pt;
-                margin-top: 10px;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 3px;
-            }
-        """)
         output_group_layout = QVBoxLayout()
 
         # Selected device label
@@ -175,7 +134,7 @@ class MainWindow(QWidget):
         plot_container = QWidget()
         plot_layout = QVBoxLayout(plot_container)
 
-        self.figure = Figure(figsize=(6, 4), tight_layout=True)
+        self.figure = Figure(figsize=(6, 2.2), tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
@@ -190,8 +149,8 @@ class MainWindow(QWidget):
         self.ax2 = self.ax.twinx()
         self.ax2.set_ylabel("mA", color='r')
         self.ax2.tick_params(axis='y', colors='r')
-
-        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.setMaximumHeight(300)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         plot_layout.addWidget(self.toolbar)
         plot_layout.addWidget(self.canvas)
@@ -203,7 +162,7 @@ class MainWindow(QWidget):
         graph_btn_layout.addWidget(self.clear_graph_button)
         plot_layout.addLayout(graph_btn_layout)
 
-        plot_container.setMinimumHeight(200)
+        plot_container.setMinimumHeight(140)
         splitter.addWidget(plot_container)
 
         # Log container
@@ -242,6 +201,7 @@ class MainWindow(QWidget):
         # Set scroll as the only widget of this window
         outer_layout = QVBoxLayout(self)
         outer_layout.addWidget(scroll)
+
 # ------------------------- ON METHPDS -------------------------
     def on_discover(self):
         """
