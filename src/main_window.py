@@ -544,7 +544,7 @@ class MainWindow(QWidget):
             ma_range = ma_max - ma_min
             print(mv_min, mv_max)
             print(ma_min, ma_max)
-            self.ax.set_ylim(mv_min - 0.1 * mv_range, mv_max + 0.1 * mv_range)
+            self.ax.set_ylim(0, mv_max + 0.1 * mv_range)
             self.ax2.set_ylim(ma_min - 0.1 * ma_range, ma_max + 0.1 * ma_range)
 
             # Plot mV on primary y-axis
