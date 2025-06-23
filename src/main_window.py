@@ -264,6 +264,7 @@ class MainWindow(QWidget):
         thread.start()
 
         self.manager.set_worker(serial, worker, thread)    # Save worker and thread references
+        self.manager.update_status(serial, "Testing")  # Add this line
         self.update_status_column(serial, "Testing")  
 
     def on_stop(self):
