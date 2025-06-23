@@ -447,8 +447,8 @@ class MainWindow(QWidget):
                 QMessageBox.warning(self, "Warning", f"Device {device.serial} is currently testing and cannot be removed.")
                 continue  # skip removal
 
-            self.running_table.blockSignals(True)
             self.manager.remove_running_device(device.serial)    # remove device from device manager 
+            self.running_table.blockSignals(True)
             self.running_table.removeRow(row)    # removes row from devices in test
             self.running_table.blockSignals(False)
 
