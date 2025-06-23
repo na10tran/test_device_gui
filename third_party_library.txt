@@ -1,0 +1,18 @@
+1. Third-Party Library: Matplotlib
+- Justification for Use:
+Matplotlib is a widely used and robust plotting library for Python that provides more than enough capabilities for creating animated 
+visualizations. In this project, Matplotlib is used to create the real-time plots for device data(voltage/current) in the PyQT GUI.
+It is very east to integrate with PyQt through the FigurCanvas and it amde an ideal choice to embed the grpahs into the user interface.
+Matplotlib is a widely adopted, robust, and mature plotting library for Python that provides extensive capabilities for 
+
+- Considerations:
+Somethings to consider when choosing this library included:
+    1. Performance: While suitable for most use cases, Matplotlib may not be optimal forr high-frequency real-time plotting or very large datasets. 
+       In those cases, alternatives like PyQtGraph may be considered. However, for the use of this project, Matplotlib served its purpose and we did not 
+       have to deal with extremely large datasets.
+    2. Dependencies: Matplotlib adds to the overall package size and requires dependencies like NumPy.
+
+2. Third-Party Library: PyQt5
+- Justification for Use:
+PyQt5 is the chosen GUI framework as per project requirements. It offers comprehensive widgets, signals/slots  for event handling, 
+and seamless integration with Python.

@@ -1,16 +1,14 @@
 Device Test GUI — Build & Run Instructions
+Rocket Lab Production Automation Coding Test – Test Devices
+Created by Nathan Tran
 ==========================================
 OVERVIEW
 This program provides a graphical interface to discover, monitor, and run tests on network-connected devices.
 Users can:
-
-Start and stop tests
-
-View live voltage vs. time plots
-
-Save test logs and plots
-
-Manage multiple devices in parallel
+- Start and stop tests
+- View live voltage vs. time plots
+- Save test logs and plots
+- Manage multiple devices in parallel
 
 ==========================================
 PREREQUISITES
@@ -19,7 +17,6 @@ PREREQUISITES
 • Required Python Packages:
 - PyQt5
 - matplotlib
-• Networking: UDP multicast must be enabled for device discovery
 
 ==========================================
 INSTALLATION
@@ -57,15 +54,10 @@ Step 3 — Locate and run the executable:
 cd dist
 ./main_window
 
-📝 Tip: Test the executable on a clean system to confirm that all required modules are bundled correctly.
-
 ==========================================
 TROUBLESHOOTING
 • No Devices Discovered:
-
-Ensure devices are powered and reachable
-
-Check your firewall rules (UDP multicast may be blocked)
+Ensure devices are created and running
 
 • Graph or Logs Not Appearing:
 
