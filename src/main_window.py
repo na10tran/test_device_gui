@@ -559,7 +559,14 @@ class MainWindow(QWidget):
             mv_min, mv_max = min(mv_vals), max(mv_vals)
             ma_min, ma_max = min(ma_vals), max(ma_vals)
 
-            # Add padding to limits (10% margin)
+            # Ensure min < max for both
+            if mv_min > mv_max:
+                mv_min, mv_max = mv_max, mv_min
+
+            if ma_min > ma_max:
+                ma_min, ma_max = ma_max, ma_min
+
+            # Add padding
             mv_range = mv_max - mv_min
             ma_range = ma_max - ma_min
 
