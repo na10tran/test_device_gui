@@ -297,7 +297,7 @@ class MainWindow(QWidget):
         worker = DeviceWorker(device, duration=duration, rate=rate)    # create a worker for the test
         # Connect signals to handle status updates, data points, and test completion
         worker.status_signal.connect(lambda msg: self.on_status(serial, msg))
-        worker.data_signal.connect(lambda t, mv: self.on_data(serial, t, mv))
+        worker.data_signal.connect(lambda t, mv, ma: self.on_data(serial, t, mv, ma))
         worker.finished_signal.connect(lambda: self.on_finished(serial))
 
         thread = threading.Thread(target=worker.start_test)    # Run worker in a background thread
